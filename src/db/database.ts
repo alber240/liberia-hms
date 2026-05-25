@@ -164,6 +164,64 @@ export interface PurchaseOrderItem {
     synced: number;
 }
 
+// Laboratory Interfaces
+export interface LabTest {
+    id?: number;
+    name: string;
+    category: string;
+    price: number;
+    preparationInstructions: string;
+    normalRange: string;
+    unit: string;
+    turnaroundHours: number;
+    requiresFasting: boolean;
+    active: boolean;
+    synced: number;
+}
+
+export interface LabOrder {
+    id?: number;
+    orderNumber: string;
+    patientUhid: string;
+    patientName: string;
+    doctorName: string;
+    orderDate: string;
+    collectionDate?: string;
+    collectionBy?: string;
+    status: "ordered" | "collected" | "processing" | "completed" | "cancelled";
+    priority: "routine" | "urgent" | "stat";
+    notes: string;
+    synced: number;
+}
+
+export interface LabOrderItem {
+    id?: number;
+    orderId: number;
+    testId: number;
+    testName: string;
+    result?: string;
+    normalRange: string;
+    unit: string;
+    isAbnormal: boolean;
+    resultDate?: string;
+    resultEnteredBy?: string;
+    status: "pending" | "in-progress" | "completed";
+    notes: string;
+    synced: number;
+}
+
+export interface LabSample {
+    id?: number;
+    orderId: number;
+    sampleType: string;
+    sampleNumber: string;
+    collectionDate: string;
+    collectionBy: string;
+    status: "collected" | "received" | "processing" | "rejected";
+    rejectionReason?: string;
+    synced: number;
+}
+
 export interface SyncQueue {
     id?: number;
     operation: "CREATE" | "UPDATE" | "DELETE";
@@ -183,11 +241,15 @@ class LiberiaHMSDatabase extends Dexie {
     suppliers!: Table<Supplier, number>;
     purchaseOrders!: Table<PurchaseOrder, number>;
     purchaseOrderItems!: Table<PurchaseOrderItem, number>;
+    labTests!: Table<LabTest, number>;
+    labOrders!: Table<LabOrder, number>;
+    labOrderItems!: Table<LabOrderItem, number>;
+    labSamples!: Table<LabSample, number>;
     syncQueue!: Table<SyncQueue, number>;
 
     constructor() {
         super("LiberiaHMSDB");
-        this.version(5).stores({
+        this.version(6).stores({
             patients: "uhid, fullName, phone, registrationDate, synced",
             doctors: "id, name, specialty, synced",
             appointments: "++id, patientUhid, doctorId, date, time, status, reminderSent, isRecurring, parentAppointmentId, synced",
@@ -198,6 +260,10 @@ class LiberiaHMSDatabase extends Dexie {
             suppliers: "++id, name, phone, synced",
             purchaseOrders: "++id, orderNumber, supplierId, status, synced",
             purchaseOrderItems: "++id, orderId, drugId, synced",
+            labTests: "++id, name, category, active, synced",
+            labOrders: "++id, orderNumber, patientUhid, status, orderDate, synced",
+            labOrderItems: "++id, orderId, testId, status, synced",
+            labSamples: "++id, orderId, sampleNumber, status, synced",
             syncQueue: "++id, operation, timestamp",
         });
     }
@@ -258,60 +324,24 @@ class LiberiaHMSDatabase extends Dexie {
         let doctors = await this.doctors.toArray();
         if (doctors.length === 0) {
             const defaultDoctors: Doctor[] = [
-                { 
-                    id: "doc1", name: "Dr. John Williams", specialty: "General Medicine", phone: "0888123456", email: "john@hospital.com",
-                    schedule: {
-                        monday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" },
-                        tuesday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" },
-                        wednesday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" },
-                        thursday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" },
-                        friday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" },
-                        saturday: { start: "09:00", end: "13:00", breakStart: undefined, breakEnd: undefined },
-                        sunday: null,
-                    },
-                    appointmentDuration: 30, maxAppointmentsPerDay: 20, synced: 1,
-                },
-                { 
-                    id: "doc2", name: "Dr. Sarah Johnson", specialty: "Pediatrics", phone: "0888123457", email: "sarah@hospital.com",
-                    schedule: {
-                        monday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" },
-                        tuesday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" },
-                        wednesday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" },
-                        thursday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" },
-                        friday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" },
-                        saturday: { start: "09:00", end: "14:00", breakStart: undefined, breakEnd: undefined },
-                        sunday: null,
-                    },
-                    appointmentDuration: 30, maxAppointmentsPerDay: 18, synced: 1,
-                },
-                { 
-                    id: "doc3", name: "Dr. Michael Brown", specialty: "Cardiology", phone: "0888123458", email: "michael@hospital.com",
-                    schedule: {
-                        monday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" },
-                        tuesday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" },
-                        wednesday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" },
-                        thursday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" },
-                        friday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" },
-                        saturday: null, sunday: null,
-                    },
-                    appointmentDuration: 45, maxAppointmentsPerDay: 12, synced: 1,
-                },
-                { 
-                    id: "doc4", name: "Dr. Patricia Davis", specialty: "Obstetrics & Gynecology", phone: "0888123459", email: "patricia@hospital.com",
-                    schedule: {
-                        monday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" },
-                        tuesday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" },
-                        wednesday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" },
-                        thursday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" },
-                        friday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" },
-                        saturday: { start: "09:00", end: "14:00", breakStart: undefined, breakEnd: undefined },
-                        sunday: null,
-                    },
-                    appointmentDuration: 30, maxAppointmentsPerDay: 16, synced: 1,
-                },
+                { id: "doc1", name: "Dr. John Williams", specialty: "General Medicine", phone: "0888123456", email: "john@hospital.com",
+                    schedule: { monday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" }, tuesday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" }, wednesday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" }, thursday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" }, friday: { start: "08:00", end: "17:00", breakStart: "12:00", breakEnd: "13:00" }, saturday: { start: "09:00", end: "13:00", breakStart: undefined, breakEnd: undefined }, sunday: null },
+                    appointmentDuration: 30, maxAppointmentsPerDay: 20, synced: 1 },
+                { id: "doc2", name: "Dr. Sarah Johnson", specialty: "Pediatrics", phone: "0888123457", email: "sarah@hospital.com",
+                    schedule: { monday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" }, tuesday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" }, wednesday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" }, thursday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" }, friday: { start: "09:00", end: "18:00", breakStart: "13:00", breakEnd: "14:00" }, saturday: { start: "09:00", end: "14:00", breakStart: undefined, breakEnd: undefined }, sunday: null },
+                    appointmentDuration: 30, maxAppointmentsPerDay: 18, synced: 1 },
+                { id: "doc3", name: "Dr. Michael Brown", specialty: "Cardiology", phone: "0888123458", email: "michael@hospital.com",
+                    schedule: { monday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" }, tuesday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" }, wednesday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" }, thursday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" }, friday: { start: "08:00", end: "16:00", breakStart: "12:00", breakEnd: "13:00" }, saturday: null, sunday: null },
+                    appointmentDuration: 45, maxAppointmentsPerDay: 12, synced: 1 },
+                { id: "doc4", name: "Dr. Patricia Davis", specialty: "Obstetrics & Gynecology", phone: "0888123459", email: "patricia@hospital.com",
+                    schedule: { monday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" }, tuesday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" }, wednesday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" }, thursday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" }, friday: { start: "10:00", end: "19:00", breakStart: "14:00", breakEnd: "15:00" }, saturday: { start: "09:00", end: "14:00", breakStart: undefined, breakEnd: undefined }, sunday: null },
+                    appointmentDuration: 30, maxAppointmentsPerDay: 16, synced: 1 },
             ];
-            await this.doctors.bulkAdd(defaultDoctors);
-            doctors = defaultDoctors;
+            for (const doctor of defaultDoctors) {
+                const existing = await this.doctors.get(doctor.id);
+                if (!existing) await this.doctors.add(doctor);
+            }
+            doctors = await this.doctors.toArray();
         }
         return doctors;
     }
@@ -326,19 +356,9 @@ class LiberiaHMSDatabase extends Dexie {
     }
 
     async addAppointment(appointment: Omit<Appointment, "id" | "createdAt" | "synced" | "reminderSent">): Promise<number> {
-        const newAppointment: Appointment = {
-            ...appointment,
-            reminderSent: false,
-            createdAt: new Date().toISOString(),
-            synced: 0,
-        };
+        const newAppointment: Appointment = { ...appointment, reminderSent: false, createdAt: new Date().toISOString(), synced: 0 };
         const id = await this.appointments.add(newAppointment);
-        await this.syncQueue.add({
-            operation: "CREATE",
-            table: "appointments",
-            data: newAppointment,
-            timestamp: Date.now(),
-        });
+        await this.syncQueue.add({ operation: "CREATE", table: "appointments", data: newAppointment, timestamp: Date.now() });
         return id;
     }
 
@@ -349,33 +369,20 @@ class LiberiaHMSDatabase extends Dexie {
     async getAvailableTimeSlots(doctorId: string, date: string): Promise<string[]> {
         const doctor = await this.doctors.get(doctorId);
         if (!doctor) return [];
-        
-        const dateObj = new Date(date);
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const dayOfWeek = dayNames[dateObj.getDay()] as keyof Doctor["schedule"];
+        const dayOfWeek = dayNames[new Date(date).getDay()] as keyof Doctor["schedule"];
         const daySchedule = doctor.schedule[dayOfWeek];
-        
         if (!daySchedule) return [];
-        
-        const appointments = await this.appointments
-            .where("doctorId")
-            .equals(doctorId)
-            .and(a => a.date === date && a.status === "scheduled")
-            .toArray();
-        
+        const appointments = await this.appointments.where("doctorId").equals(doctorId).and(a => a.date === date && a.status === "scheduled").toArray();
         const bookedTimes = new Set(appointments.map(a => a.time));
         const slots: string[] = [];
-        
         let current = this.timeToMinutes(daySchedule.start);
         const end = this.timeToMinutes(daySchedule.end);
         const breakStart = daySchedule.breakStart ? this.timeToMinutes(daySchedule.breakStart) : null;
         const breakEnd = daySchedule.breakEnd ? this.timeToMinutes(daySchedule.breakEnd) : null;
-        
         while (current + doctor.appointmentDuration <= end) {
             const timeSlot = this.minutesToTime(current);
-            if ((!breakStart || !breakEnd || current < breakStart || current >= breakEnd) && !bookedTimes.has(timeSlot)) {
-                slots.push(timeSlot);
-            }
+            if ((!breakStart || !breakEnd || current < breakStart || current >= breakEnd) && !bookedTimes.has(timeSlot)) slots.push(timeSlot);
             current += doctor.appointmentDuration;
         }
         return slots;
@@ -385,19 +392,9 @@ class LiberiaHMSDatabase extends Dexie {
         const appointments: Appointment[] = [];
         let currentDate = new Date(parentAppointment.date);
         const end = new Date(endDate);
-        
         while (currentDate <= end) {
             if (currentDate.toISOString().split('T')[0] !== parentAppointment.date) {
-                const newAppointment: Appointment = {
-                    ...parentAppointment,
-                    id: undefined,
-                    date: currentDate.toISOString().split('T')[0],
-                    parentAppointmentId: parentAppointment.id,
-                    reminderSent: false,
-                    createdAt: new Date().toISOString(),
-                    synced: 0,
-                };
-                appointments.push(newAppointment);
+                appointments.push({ ...parentAppointment, id: undefined, date: currentDate.toISOString().split('T')[0], parentAppointmentId: parentAppointment.id, reminderSent: false, createdAt: new Date().toISOString(), synced: 0 });
             }
             switch (parentAppointment.recurringPattern) {
                 case "daily": currentDate.setDate(currentDate.getDate() + 1); break;
@@ -410,61 +407,20 @@ class LiberiaHMSDatabase extends Dexie {
 
     // Drug methods
     async addDrug(drug: Omit<Drug, "id" | "createdAt" | "updatedAt" | "synced">): Promise<number> {
-        const newDrug: Drug = {
-            ...drug,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            synced: 0,
-        };
+        const newDrug: Drug = { ...drug, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), synced: 0 };
         return await this.drugs.add(newDrug);
     }
 
-    async getAllDrugs(): Promise<Drug[]> {
-        return await this.drugs.toArray();
-    }
+    async getAllDrugs(): Promise<Drug[]> { return await this.drugs.toArray(); }
+    async getLowStockDrugs(): Promise<Drug[]> { return await this.drugs.filter(d => d.quantityInStock <= d.reorderLevel).toArray(); }
+    async getExpiringDrugs(daysThreshold: number = 90): Promise<Drug[]> { const threshold = new Date(); threshold.setDate(threshold.getDate() + daysThreshold); return await this.drugs.filter(d => new Date(d.expiryDate) <= threshold && new Date(d.expiryDate) >= new Date()).toArray(); }
+    async getExpiredDrugs(): Promise<Drug[]> { const today = new Date().toISOString().split('T')[0]; return await this.drugs.filter(d => d.expiryDate < today).toArray(); }
+    async updateStock(drugId: number, quantityChange: number, isAddition: boolean): Promise<void> { const drug = await this.drugs.get(drugId); if (drug) { const newQuantity = isAddition ? drug.quantityInStock + quantityChange : drug.quantityInStock - quantityChange; await this.drugs.update(drugId, { quantityInStock: newQuantity, updatedAt: new Date().toISOString(), synced: 0 }); } }
+    async dispenseMedication(dispensing: Omit<DispensingRecord, "id" | "synced">): Promise<void> { await this.dispensingRecords.add({ ...dispensing, synced: 0 }); await this.updateStock(dispensing.drugId, dispensing.quantity, false); }
+    async getDispensingHistory(patientUhid: string): Promise<DispensingRecord[]> { return await this.dispensingRecords.where("patientUhid").equals(patientUhid).toArray(); }
 
-    async getLowStockDrugs(): Promise<Drug[]> {
-        return await this.drugs.filter(d => d.quantityInStock <= d.reorderLevel).toArray();
-    }
-
-    async getExpiringDrugs(daysThreshold: number = 90): Promise<Drug[]> {
-        const threshold = new Date();
-        threshold.setDate(threshold.getDate() + daysThreshold);
-        return await this.drugs.filter(d => new Date(d.expiryDate) <= threshold && new Date(d.expiryDate) >= new Date()).toArray();
-    }
-
-    async getExpiredDrugs(): Promise<Drug[]> {
-        const today = new Date().toISOString().split('T')[0];
-        return await this.drugs.filter(d => d.expiryDate < today).toArray();
-    }
-
-    async updateStock(drugId: number, quantityChange: number, isAddition: boolean): Promise<void> {
-        const drug = await this.drugs.get(drugId);
-        if (drug) {
-            const newQuantity = isAddition ? drug.quantityInStock + quantityChange : drug.quantityInStock - quantityChange;
-            await this.drugs.update(drugId, { quantityInStock: newQuantity, updatedAt: new Date().toISOString(), synced: 0 });
-        }
-    }
-
-    async dispenseMedication(dispensing: Omit<DispensingRecord, "id" | "synced">): Promise<void> {
-        await this.dispensingRecords.add({ ...dispensing, synced: 0 });
-        await this.updateStock(dispensing.drugId, dispensing.quantity, false);
-    }
-
-    async getDispensingHistory(patientUhid: string): Promise<DispensingRecord[]> {
-        return await this.dispensingRecords.where("patientUhid").equals(patientUhid).toArray();
-    }
-
-    private timeToMinutes(time: string): number {
-        const [hours, minutes] = time.split(':').map(Number);
-        return hours * 60 + minutes;
-    }
-
-    private minutesToTime(minutes: number): string {
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-    }
+    private timeToMinutes(time: string): number { const [hours, minutes] = time.split(':').map(Number); return hours * 60 + minutes; }
+    private minutesToTime(minutes: number): string { const hours = Math.floor(minutes / 60); const mins = minutes % 60; return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`; }
 }
 
 export const db = new LiberiaHMSDatabase();

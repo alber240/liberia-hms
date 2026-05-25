@@ -8,7 +8,8 @@
                 "registration":  "Patient Registration",
                 "appointments":  "Appointments",
                 "patients":  "Patient List",
-                "pharmacy":  "Pharmacy"
+                "pharmacy":  "Pharmacy",
+                "laboratory":  "Laboratory"
             },
     "registration":  {
                          "title":  "Register New Patient",
