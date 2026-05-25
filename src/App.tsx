@@ -1,13 +1,25 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./components/LanguageSwitcher";
 import OfflineIndicator from "./components/OfflineIndicator";
+import SyncButton from "./components/SyncButton";
 import Dashboard from "./pages/Dashboard";
 import PatientRegistration from "./pages/PatientRegistration";
+import { syncService } from "./services/syncService";
 
 function App() {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<"dashboard" | "registration">("dashboard");
+
+    useEffect(() => {
+        // Start auto-sync when app loads
+        syncService.startAutoSync();
+
+        // Cleanup on app unmount
+        return () => {
+            syncService.stopAutoSync();
+        };
+    }, []);
 
     return (
         <div style={{ minHeight: "100vh", background: "#e8f0fe" }}>
@@ -17,6 +29,7 @@ function App() {
                     <p style={{ fontSize: "0.75rem", opacity: 0.7 }}>{t("app.subtitle")}</p>
                 </div>
                 <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                    <SyncButton />
                     <OfflineIndicator />
                     <LanguageSwitcher />
                 </div>
