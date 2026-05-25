@@ -1,0 +1,9 @@
+﻿{
+    "name": "LiberiaHMS",
+    "short_name": "LibHMS",
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#0f2b3d",
+    "background_color": "#e8f0fe",
+    "lang": "en"
+}

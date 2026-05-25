@@ -1,0 +1,52 @@
+﻿{
+    "app": {
+        "title": "LiberiaHMS - Hospital Management System",
+        "subtitle": "Offline-First | West Africa"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "registration": "Patient Registration",
+        "patients": "Patient List"
+    },
+    "registration": {
+        "title": "Register New Patient",
+        "uhid": "Unique Health ID (UHID)",
+        "fullName": "Full Name",
+        "dateOfBirth": "Date of Birth",
+        "gender": "Gender",
+        "male": "Male",
+        "female": "Female",
+        "other": "Other",
+        "phone": "Phone Number",
+        "alternatePhone": "Alternate Phone",
+        "address": "Address",
+        "emergencyContact": "Emergency Contact Name",
+        "emergencyPhone": "Emergency Contact Phone",
+        "submit": "Register Patient",
+        "reset": "Reset Form",
+        "success": "Patient registered successfully! UHID: {{uhid}}",
+        "duplicateWarning": "Possible duplicate found. Check existing records.",
+        "required": "This field is required",
+        "uhidAuto": "Will be auto-generated"
+    },
+    "dashboard": {
+        "todayVisits": "Today's Visits",
+        "bedOccupancy": "Bed Occupancy",
+        "totalPatients": "Total Patients",
+        "offlineQueue": "Offline Queue",
+        "recentPatients": "Recent Patients"
+    },
+    "offline": {
+        "online": "Online - Synced",
+        "offline": "Offline Mode - Working locally",
+        "queued": "{{count}} items waiting to sync"
+    },
+    "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "search": "Search",
+        "edit": "Edit",
+        "delete": "Delete",
+        "loading": "Loading..."
+    }
+}

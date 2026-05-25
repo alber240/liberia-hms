@@ -1,0 +1,52 @@
+﻿{
+    "app": {
+        "title": "LiberiaHMS - SystÃ¨me de Gestion HospitaliÃ¨re",
+        "subtitle": "Hors ligne d'abord | Afrique de l'Ouest"
+    },
+    "nav": {
+        "dashboard": "Tableau de bord",
+        "registration": "Enregistrement Patient",
+        "patients": "Liste des Patients"
+    },
+    "registration": {
+        "title": "Enregistrer un Nouveau Patient",
+        "uhid": "Identifiant Unique (UHID)",
+        "fullName": "Nom Complet",
+        "dateOfBirth": "Date de Naissance",
+        "gender": "Sexe",
+        "male": "Masculin",
+        "female": "FÃ©minin",
+        "other": "Autre",
+        "phone": "NumÃ©ro de TÃ©lÃ©phone",
+        "alternatePhone": "TÃ©lÃ©phone Secondaire",
+        "address": "Adresse",
+        "emergencyContact": "Contact d'Urgence (Nom)",
+        "emergencyPhone": "TÃ©lÃ©phone d'Urgence",
+        "submit": "Enregistrer le Patient",
+        "reset": "RÃ©initialiser",
+        "success": "Patient enregistrÃ© avec succÃ¨s! UHID: {{uhid}}",
+        "duplicateWarning": "Doublon possible trouvÃ©. VÃ©rifiez les enregistrements existants.",
+        "required": "Ce champ est obligatoire",
+        "uhidAuto": "Sera gÃ©nÃ©rÃ© automatiquement"
+    },
+    "dashboard": {
+        "todayVisits": "Visites Aujourd'hui",
+        "bedOccupancy": "Occupation des Lits",
+        "totalPatients": "Nombre Total de Patients",
+        "offlineQueue": "File d'attente hors ligne",
+        "recentPatients": "Patients RÃ©cents"
+    },
+    "offline": {
+        "online": "En ligne - SynchronisÃ©",
+        "offline": "Mode Hors Ligne - Travail local",
+        "queued": "{{count}} Ã©lÃ©ments en attente de synchronisation"
+    },
+    "common": {
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "search": "Rechercher",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "loading": "Chargement..."
+    }
+}
