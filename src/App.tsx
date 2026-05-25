@@ -5,19 +5,21 @@ import OfflineIndicator from "./components/OfflineIndicator";
 import SyncButton from "./components/SyncButton";
 import Dashboard from "./pages/Dashboard";
 import PatientRegistration from "./pages/PatientRegistration";
+import Appointments from "./pages/Appointments";
+import Pharmacy from "./pages/Pharmacy";
 import { syncService } from "./services/syncService";
+import { reminderService } from "./services/reminderService";
 
 function App() {
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<"dashboard" | "registration">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "registration" | "appointments" | "pharmacy">("dashboard");
 
     useEffect(() => {
-        // Start auto-sync when app loads
         syncService.startAutoSync();
-
-        // Cleanup on app unmount
+        reminderService.startReminderChecker();
         return () => {
             syncService.stopAutoSync();
+            reminderService.stopReminderChecker();
         };
     }, []);
 
@@ -35,7 +37,7 @@ function App() {
                 </div>
             </div>
 
-            <div style={{ background: "white", borderBottom: "1px solid #cbd5e1", padding: "0 24px", display: "flex", gap: "24px" }}>
+            <div style={{ background: "white", borderBottom: "1px solid #cbd5e1", padding: "0 24px", display: "flex", gap: "24px", overflowX: "auto" }}>
                 <button
                     onClick={() => setActiveTab("dashboard")}
                     style={{
@@ -49,6 +51,34 @@ function App() {
                     }}
                 >
                     📊 {t("nav.dashboard")}
+                </button>
+                <button
+                    onClick={() => setActiveTab("appointments")}
+                    style={{
+                        padding: "14px 0",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "1rem",
+                        fontWeight: activeTab === "appointments" ? "bold" : "normal",
+                        borderBottom: activeTab === "appointments" ? "3px solid #0f2b3d" : "none",
+                    }}
+                >
+                    📅 {t("nav.appointments")}
+                </button>
+                <button
+                    onClick={() => setActiveTab("pharmacy")}
+                    style={{
+                        padding: "14px 0",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "1rem",
+                        fontWeight: activeTab === "pharmacy" ? "bold" : "normal",
+                        borderBottom: activeTab === "pharmacy" ? "3px solid #0f2b3d" : "none",
+                    }}
+                >
+                    💊 {t("nav.pharmacy")}
                 </button>
                 <button
                     onClick={() => setActiveTab("registration")}
@@ -68,6 +98,8 @@ function App() {
 
             <div style={{ padding: "24px" }}>
                 {activeTab === "dashboard" && <Dashboard />}
+                {activeTab === "appointments" && <Appointments />}
+                {activeTab === "pharmacy" && <Pharmacy />}
                 {activeTab === "registration" && <PatientRegistration />}
             </div>
 

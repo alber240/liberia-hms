@@ -1,52 +1,89 @@
 ﻿{
-    "app": {
-        "title": "LiberiaHMS - SystÃ¨me de Gestion HospitaliÃ¨re",
-        "subtitle": "Hors ligne d'abord | Afrique de l'Ouest"
-    },
-    "nav": {
-        "dashboard": "Tableau de bord",
-        "registration": "Enregistrement Patient",
-        "patients": "Liste des Patients"
-    },
-    "registration": {
-        "title": "Enregistrer un Nouveau Patient",
-        "uhid": "Identifiant Unique (UHID)",
-        "fullName": "Nom Complet",
-        "dateOfBirth": "Date de Naissance",
-        "gender": "Sexe",
-        "male": "Masculin",
-        "female": "FÃ©minin",
-        "other": "Autre",
-        "phone": "NumÃ©ro de TÃ©lÃ©phone",
-        "alternatePhone": "TÃ©lÃ©phone Secondaire",
-        "address": "Adresse",
-        "emergencyContact": "Contact d'Urgence (Nom)",
-        "emergencyPhone": "TÃ©lÃ©phone d'Urgence",
-        "submit": "Enregistrer le Patient",
-        "reset": "RÃ©initialiser",
-        "success": "Patient enregistrÃ© avec succÃ¨s! UHID: {{uhid}}",
-        "duplicateWarning": "Doublon possible trouvÃ©. VÃ©rifiez les enregistrements existants.",
-        "required": "Ce champ est obligatoire",
-        "uhidAuto": "Sera gÃ©nÃ©rÃ© automatiquement"
-    },
-    "dashboard": {
-        "todayVisits": "Visites Aujourd'hui",
-        "bedOccupancy": "Occupation des Lits",
-        "totalPatients": "Nombre Total de Patients",
-        "offlineQueue": "File d'attente hors ligne",
-        "recentPatients": "Patients RÃ©cents"
-    },
-    "offline": {
-        "online": "En ligne - SynchronisÃ©",
-        "offline": "Mode Hors Ligne - Travail local",
-        "queued": "{{count}} Ã©lÃ©ments en attente de synchronisation"
-    },
-    "common": {
-        "save": "Enregistrer",
-        "cancel": "Annuler",
-        "search": "Rechercher",
-        "edit": "Modifier",
-        "delete": "Supprimer",
-        "loading": "Chargement..."
-    }
+    "app":  {
+                "title":  "LiberiaHMS - Système de Gestion Hospitalière",
+                "subtitle":  "Hors ligne d\u0027abord | Afrique de l\u0027Ouest"
+            },
+    "nav":  {
+                "dashboard":  "Tableau de bord",
+                "registration":  "Enregistrement Patient",
+                "appointments":  "Rendez-vous",
+                "patients":  "Liste des Patients",
+                "pharmacy":  "Pharmacie"
+            },
+    "registration":  {
+                         "title":  "Enregistrer un Nouveau Patient",
+                         "uhid":  "Identifiant Unique (UHID)",
+                         "fullName":  "Nom Complet",
+                         "dateOfBirth":  "Date de Naissance",
+                         "gender":  "Sexe",
+                         "male":  "Masculin",
+                         "female":  "Féminin",
+                         "other":  "Autre",
+                         "phone":  "Numéro de Téléphone",
+                         "alternatePhone":  "Téléphone Secondaire",
+                         "address":  "Adresse",
+                         "emergencyContact":  "Contact d\u0027Urgence (Nom)",
+                         "emergencyPhone":  "Téléphone d\u0027Urgence",
+                         "submit":  "Enregistrer le Patient",
+                         "reset":  "Réinitialiser",
+                         "success":  "Patient enregistré avec succès! UHID: {{uhid}}",
+                         "duplicateWarning":  "Doublon possible trouvé. Vérifiez les enregistrements existants.",
+                         "required":  "Ce champ est obligatoire",
+                         "uhidAuto":  "Sera généré automatiquement",
+                         "email":  "Adresse E-mail"
+                     },
+    "dashboard":  {
+                      "todayVisits":  "Visites Aujourd\u0027hui",
+                      "bedOccupancy":  "Occupation des Lits",
+                      "totalPatients":  "Nombre Total de Patients",
+                      "offlineQueue":  "File d\u0027attente hors ligne",
+                      "recentPatients":  "Patients Récents"
+                  },
+    "offline":  {
+                    "online":  "En ligne - Synchronisé",
+                    "offline":  "Mode Hors Ligne - Travail local",
+                    "queued":  "{{count}} éléments en attente de synchronisation"
+                },
+    "common":  {
+                   "save":  "Enregistrer",
+                   "cancel":  "Annuler",
+                   "search":  "Rechercher",
+                   "edit":  "Modifier",
+                   "delete":  "Supprimer",
+                   "loading":  "Chargement..."
+               },
+    "doctor":  {
+                   "breakStart":  "Début de pause",
+                   "breakEnd":  "Fin de pause",
+                   "scheduleManagement":  "Gestion des horaires des médecins",
+                   "end":  "Heure de fin",
+                   "start":  "Heure de début",
+                   "day":  "Jour",
+                   "maxAppointments":  "Max rendez-vous par jour",
+                   "selectDoctor":  "Sélectionner un médecin",
+                   "appointmentDuration":  "Durée du rendez-vous",
+                   "status":  "Statut",
+                   "manageSchedule":  "Gérer l\u0027horaire"
+               },
+    "appointment":  {
+                        "time":  "Heure",
+                        "notes":  "Notes",
+                        "selectPatient":  "Sélectionner Patient",
+                        "duration":  "Durée",
+                        "title":  "Planification des Rendez-vous",
+                        "status_cancelled":  "Annulé",
+                        "patient":  "Patient",
+                        "reminderNote":  "Les rappels pour les rendez-vous de demain sont envoyés automatiquement par SMS/Email",
+                        "selectDoctor":  "Sélectionner Médecin",
+                        "recurringPattern":  "Fréquence",
+                        "recurringEndDate":  "Date de fin",
+                        "recurring":  "Rendez-vous récurrent",
+                        "status_no-show":  "Absent",
+                        "status_completed":  "Terminé",
+                        "doctor":  "Médecin",
+                        "bookNew":  "Nouveau Rendez-vous",
+                        "status_scheduled":  "Planifié",
+                        "book":  "Réserver Rendez-vous",
+                        "purpose":  "Motif"
+                    }
 }

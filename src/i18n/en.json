@@ -1,52 +1,89 @@
 ﻿{
-    "app": {
-        "title": "LiberiaHMS - Hospital Management System",
-        "subtitle": "Offline-First | West Africa"
-    },
-    "nav": {
-        "dashboard": "Dashboard",
-        "registration": "Patient Registration",
-        "patients": "Patient List"
-    },
-    "registration": {
-        "title": "Register New Patient",
-        "uhid": "Unique Health ID (UHID)",
-        "fullName": "Full Name",
-        "dateOfBirth": "Date of Birth",
-        "gender": "Gender",
-        "male": "Male",
-        "female": "Female",
-        "other": "Other",
-        "phone": "Phone Number",
-        "alternatePhone": "Alternate Phone",
-        "address": "Address",
-        "emergencyContact": "Emergency Contact Name",
-        "emergencyPhone": "Emergency Contact Phone",
-        "submit": "Register Patient",
-        "reset": "Reset Form",
-        "success": "Patient registered successfully! UHID: {{uhid}}",
-        "duplicateWarning": "Possible duplicate found. Check existing records.",
-        "required": "This field is required",
-        "uhidAuto": "Will be auto-generated"
-    },
-    "dashboard": {
-        "todayVisits": "Today's Visits",
-        "bedOccupancy": "Bed Occupancy",
-        "totalPatients": "Total Patients",
-        "offlineQueue": "Offline Queue",
-        "recentPatients": "Recent Patients"
-    },
-    "offline": {
-        "online": "Online - Synced",
-        "offline": "Offline Mode - Working locally",
-        "queued": "{{count}} items waiting to sync"
-    },
-    "common": {
-        "save": "Save",
-        "cancel": "Cancel",
-        "search": "Search",
-        "edit": "Edit",
-        "delete": "Delete",
-        "loading": "Loading..."
-    }
+    "app":  {
+                "title":  "LiberiaHMS - Hospital Management System",
+                "subtitle":  "Offline-First | West Africa"
+            },
+    "nav":  {
+                "dashboard":  "Dashboard",
+                "registration":  "Patient Registration",
+                "appointments":  "Appointments",
+                "patients":  "Patient List",
+                "pharmacy":  "Pharmacy"
+            },
+    "registration":  {
+                         "title":  "Register New Patient",
+                         "uhid":  "Unique Health ID (UHID)",
+                         "fullName":  "Full Name",
+                         "dateOfBirth":  "Date of Birth",
+                         "gender":  "Gender",
+                         "male":  "Male",
+                         "female":  "Female",
+                         "other":  "Other",
+                         "phone":  "Phone Number",
+                         "alternatePhone":  "Alternate Phone",
+                         "address":  "Address",
+                         "emergencyContact":  "Emergency Contact Name",
+                         "emergencyPhone":  "Emergency Contact Phone",
+                         "submit":  "Register Patient",
+                         "reset":  "Reset Form",
+                         "success":  "Patient registered successfully! UHID: {{uhid}}",
+                         "duplicateWarning":  "Possible duplicate found. Check existing records.",
+                         "required":  "This field is required",
+                         "uhidAuto":  "Will be auto-generated",
+                         "email":  "Email Address"
+                     },
+    "dashboard":  {
+                      "todayVisits":  "Today\u0027s Visits",
+                      "bedOccupancy":  "Bed Occupancy",
+                      "totalPatients":  "Total Patients",
+                      "offlineQueue":  "Offline Queue",
+                      "recentPatients":  "Recent Patients"
+                  },
+    "offline":  {
+                    "online":  "Online - Synced",
+                    "offline":  "Offline Mode - Working locally",
+                    "queued":  "{{count}} items waiting to sync"
+                },
+    "common":  {
+                   "save":  "Save",
+                   "cancel":  "Cancel",
+                   "search":  "Search",
+                   "edit":  "Edit",
+                   "delete":  "Delete",
+                   "loading":  "Loading..."
+               },
+    "doctor":  {
+                   "breakStart":  "Break Start",
+                   "breakEnd":  "Break End",
+                   "scheduleManagement":  "Doctor Schedule Management",
+                   "end":  "End Time",
+                   "start":  "Start Time",
+                   "day":  "Day",
+                   "maxAppointments":  "Max Appointments per Day",
+                   "selectDoctor":  "Select Doctor",
+                   "appointmentDuration":  "Appointment Duration",
+                   "status":  "Status",
+                   "manageSchedule":  "Manage Schedule"
+               },
+    "appointment":  {
+                        "time":  "Time",
+                        "notes":  "Notes",
+                        "selectPatient":  "Select Patient",
+                        "duration":  "Duration",
+                        "title":  "Appointment Scheduling",
+                        "status_cancelled":  "Cancelled",
+                        "patient":  "Patient",
+                        "reminderNote":  "Reminders for tomorrow\u0027s appointments are sent automatically via SMS/Email",
+                        "selectDoctor":  "Select Doctor",
+                        "recurringPattern":  "Recurring Pattern",
+                        "recurringEndDate":  "End Date",
+                        "recurring":  "Recurring Appointment",
+                        "status_no-show":  "No-Show",
+                        "status_completed":  "Completed",
+                        "doctor":  "Doctor",
+                        "bookNew":  "Book New Appointment",
+                        "status_scheduled":  "Scheduled",
+                        "book":  "Book Appointment",
+                        "purpose":  "Purpose"
+                    }
 }

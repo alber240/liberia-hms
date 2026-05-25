@@ -14,6 +14,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSuccess }) => {
         gender: "male" as "male" | "female" | "other",
         phone: "",
         alternatePhone: "",
+        email: "",
         address: "",
         emergencyContact: "",
         emergencyPhone: "",
@@ -57,12 +58,14 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSuccess }) => {
                 gender: "male",
                 phone: "",
                 alternatePhone: "",
+                email: "",
                 address: "",
                 emergencyContact: "",
                 emergencyPhone: "",
             });
-
+            
             if (onSuccess) onSuccess(newPatient);
+            
             setTimeout(() => setSuccess(""), 5000);
         } catch (err) {
             setError("Error saving patient. Please try again.");
@@ -79,6 +82,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSuccess }) => {
             gender: "male",
             phone: "",
             alternatePhone: "",
+            email: "",
             address: "",
             emergencyContact: "",
             emergencyPhone: "",
@@ -121,6 +125,11 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSuccess }) => {
             <div style={{ marginBottom: "16px" }}>
                 <label style={{ display: "block", marginBottom: "6px", fontWeight: "500" }}>{t("registration.alternatePhone")}</label>
                 <input type="tel" name="alternatePhone" value={formData.alternatePhone} onChange={handleChange} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1" }} />
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontWeight: "500" }}>{t("registration.email")} (Optional)</label>
+                <input type="email" name="email" value={formData.email} onChange={handleChange} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1" }} placeholder="patient@example.com" />
             </div>
 
             <div style={{ marginBottom: "16px" }}>
