@@ -8,12 +8,13 @@ import PatientRegistration from "./pages/PatientRegistration";
 import Appointments from "./pages/Appointments";
 import Pharmacy from "./pages/Pharmacy";
 import Laboratory from "./pages/Laboratory";
+import Billing from "./pages/Billing";
 import { syncService } from "./services/syncService";
 import { reminderService } from "./services/reminderService";
 
 function App() {
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<"dashboard" | "registration" | "appointments" | "pharmacy" | "laboratory">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "registration" | "appointments" | "pharmacy" | "laboratory" | "billing">("dashboard");
 
     useEffect(() => {
         syncService.startAutoSync();
@@ -39,11 +40,12 @@ function App() {
             </div>
 
             <div style={{ background: "white", borderBottom: "1px solid #cbd5e1", padding: "0 24px", display: "flex", gap: "24px", overflowX: "auto" }}>
-                <button onClick={() => setActiveTab("dashboard")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontSize: "1rem", fontWeight: activeTab === "dashboard" ? "bold" : "normal", borderBottom: activeTab === "dashboard" ? "3px solid #0f2b3d" : "none" }}>📊 {t("nav.dashboard")}</button>
-                <button onClick={() => setActiveTab("appointments")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontSize: "1rem", fontWeight: activeTab === "appointments" ? "bold" : "normal", borderBottom: activeTab === "appointments" ? "3px solid #0f2b3d" : "none" }}>📅 {t("nav.appointments")}</button>
-                <button onClick={() => setActiveTab("pharmacy")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontSize: "1rem", fontWeight: activeTab === "pharmacy" ? "bold" : "normal", borderBottom: activeTab === "pharmacy" ? "3px solid #0f2b3d" : "none" }}>💊 {t("nav.pharmacy")}</button>
-                <button onClick={() => setActiveTab("laboratory")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontSize: "1rem", fontWeight: activeTab === "laboratory" ? "bold" : "normal", borderBottom: activeTab === "laboratory" ? "3px solid #0f2b3d" : "none" }}>🔬 {t("nav.laboratory")}</button>
-                <button onClick={() => setActiveTab("registration")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontSize: "1rem", fontWeight: activeTab === "registration" ? "bold" : "normal", borderBottom: activeTab === "registration" ? "3px solid #0f2b3d" : "none" }}>📝 {t("nav.registration")}</button>
+                <button onClick={() => setActiveTab("dashboard")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontWeight: activeTab === "dashboard" ? "bold" : "normal", borderBottom: activeTab === "dashboard" ? "3px solid #0f2b3d" : "none" }}>📊 {t("nav.dashboard")}</button>
+                <button onClick={() => setActiveTab("appointments")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontWeight: activeTab === "appointments" ? "bold" : "normal", borderBottom: activeTab === "appointments" ? "3px solid #0f2b3d" : "none" }}>📅 {t("nav.appointments")}</button>
+                <button onClick={() => setActiveTab("pharmacy")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontWeight: activeTab === "pharmacy" ? "bold" : "normal", borderBottom: activeTab === "pharmacy" ? "3px solid #0f2b3d" : "none" }}>💊 {t("nav.pharmacy")}</button>
+                <button onClick={() => setActiveTab("laboratory")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontWeight: activeTab === "laboratory" ? "bold" : "normal", borderBottom: activeTab === "laboratory" ? "3px solid #0f2b3d" : "none" }}>🔬 {t("nav.laboratory")}</button>
+                <button onClick={() => setActiveTab("billing")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontWeight: activeTab === "billing" ? "bold" : "normal", borderBottom: activeTab === "billing" ? "3px solid #0f2b3d" : "none" }}>💰 {t("nav.billing")}</button>
+                <button onClick={() => setActiveTab("registration")} style={{ padding: "14px 0", background: "none", border: "none", cursor: "pointer", fontWeight: activeTab === "registration" ? "bold" : "normal", borderBottom: activeTab === "registration" ? "3px solid #0f2b3d" : "none" }}>📝 {t("nav.registration")}</button>
             </div>
 
             <div style={{ padding: "24px" }}>
@@ -51,12 +53,13 @@ function App() {
                 {activeTab === "appointments" && <Appointments />}
                 {activeTab === "pharmacy" && <Pharmacy />}
                 {activeTab === "laboratory" && <Laboratory />}
+                {activeTab === "billing" && <Billing />}
                 {activeTab === "registration" && <PatientRegistration />}
             </div>
 
             <style>{`
                 @keyframes pulse { 0% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1.2); } }
-                button:hover { opacity: 0.8; }
+                button:hover { opacity: 0.8; cursor: pointer; }
                 input, select, textarea { transition: all 0.2s; }
                 input:focus, select:focus, textarea:focus { outline: none; border-color: #0f2b3d; box-shadow: 0 0 0 2px #0f2b3d20; }
             `}</style>

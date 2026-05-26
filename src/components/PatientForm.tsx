@@ -23,6 +23,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSuccess }) => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [duplicateWarning, setDuplicateWarning] = useState(false);
+    const [lastUhid, setLastUhid] = useState("");
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -50,8 +51,9 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSuccess }) => {
                 return;
             }
 
-            const newPatient = await db.addPatient(formData);
-            setSuccess(t("registration.success", { uhid: newPatient.uhid }));
+            const uhid = await db.addPatient(formData);
+            setLastUhid(uhid);
+            setSuccess(t("registration.success", { uhid: uhid }));
             setFormData({
                 fullName: "",
                 dateOfBirth: "",
@@ -64,7 +66,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSuccess }) => {
                 emergencyPhone: "",
             });
             
-            if (onSuccess) onSuccess(newPatient);
+            if (onSuccess) {
+                // Create a mock patient object for the callback
+                onSuccess({ ...formData, uhid, registrationDate: new Date().toISOString(), synced: 0 } as Patient);
+            }
             
             setTimeout(() => setSuccess(""), 5000);
         } catch (err) {

@@ -9,7 +9,8 @@
                 "appointments":  "Appointments",
                 "patients":  "Patient List",
                 "pharmacy":  "Pharmacy",
-                "laboratory":  "Laboratory"
+                "laboratory":  "Laboratory",
+                "billing":  "Billing"
             },
     "registration":  {
                          "title":  "Register New Patient",
