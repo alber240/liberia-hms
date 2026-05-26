@@ -238,34 +238,67 @@ export interface Payment {
     synced: number;
 }
 
-export interface InsuranceCompany {
+// Staff and Authentication Interfaces
+export interface Staff {
     id?: number;
+    staffId: string;
+    username: string;
+    password: string;
     name: string;
-    code: string;
-    contactPerson: string;
+    role: "admin" | "doctor" | "nurse" | "pharmacist" | "lab_tech" | "cashier" | "accountant" | "hr" | "receptionist";
+    department: string;
+    licenseNumber?: string;
     phone: string;
     email: string;
     address: string;
-    discountRate: number;
-    active: boolean;
+    emergencyContact: string;
+    emergencyPhone: string;
+    salary: number;
+    salaryCurrency: "USD" | "LRD";
+    paySchedule: "monthly" | "biweekly" | "weekly";
+    bankName?: string;
+    accountNumber?: string;
+    startDate: string;
+    status: "active" | "on_leave" | "terminated";
+    qualifications: string;
+    createdAt: string;
     synced: number;
 }
 
-export interface InsuranceClaim {
+export interface Attendance {
     id?: number;
-    claimNumber: string;
-    invoiceId: number;
-    patientUhid: string;
-    patientName: string;
-    insuranceId: number;
-    insuranceName: string;
-    amount: number;
-    currency: "LRD" | "USD";
-    status: "pending" | "approved" | "rejected" | "paid";
-    submissionDate: string;
-    approvalDate?: string;
-    paymentDate?: string;
-    rejectionReason?: string;
+    staffId: number;
+    staffName: string;
+    date: string;
+    clockIn: string;
+    clockOut?: string;
+    hoursWorked?: number;
+    overtime?: number;
+    status: "present" | "absent" | "late" | "half_day";
+    notes: string;
+    synced: number;
+}
+
+export interface Payroll {
+    id?: number;
+    staffId: number;
+    staffName: string;
+    period: string;
+    baseSalary: number;
+    currency: "USD" | "LRD";
+    overtimeHours: number;
+    overtimePay: number;
+    allowances: number;
+    bonuses: number;
+    grossPay: number;
+    deductions: number;
+    tax: number;
+    pension: number;
+    netPay: number;
+    paymentMethod: "bank" | "cash" | "mobile_money";
+    paymentDate: string;
+    status: "pending" | "paid" | "cancelled";
+    payslipGenerated: boolean;
     notes: string;
     synced: number;
 }
@@ -294,13 +327,14 @@ class LiberiaHMSDatabase extends Dexie {
     invoices!: Table<Invoice, number>;
     invoiceItems!: Table<InvoiceItem, number>;
     payments!: Table<Payment, number>;
-    insuranceCompanies!: Table<InsuranceCompany, number>;
-    insuranceClaims!: Table<InsuranceClaim, number>;
+    staff!: Table<Staff, number>;
+    attendance!: Table<Attendance, number>;
+    payroll!: Table<Payroll, number>;
     syncQueue!: Table<SyncQueue, number>;
 
     constructor() {
         super("LiberiaHMSDB");
-        this.version(8).stores({
+        this.version(10).stores({
             patients: "uhid, fullName, phone, registrationDate, synced",
             doctors: "id, name, specialty, synced",
             appointments: "++id, patientUhid, doctorId, date, time, status, reminderSent, isRecurring, parentAppointmentId, synced",
@@ -316,8 +350,9 @@ class LiberiaHMSDatabase extends Dexie {
             invoices: "++id, invoiceNumber, patientUhid, status, date, synced",
             invoiceItems: "++id, invoiceId, synced",
             payments: "++id, invoiceId, patientUhid, paymentMethod, paymentDate, synced",
-            insuranceCompanies: "++id, name, active, synced",
-            insuranceClaims: "++id, claimNumber, invoiceId, status, synced",
+            staff: "++id, staffId, username, role, status, synced",
+            attendance: "++id, staffId, date, status, synced",
+            payroll: "++id, staffId, period, status, synced",
             syncQueue: "++id, operation, timestamp",
         });
     }
@@ -335,12 +370,7 @@ class LiberiaHMSDatabase extends Dexie {
 
     async addPatient(patientData: any): Promise<string> {
         const uhid = this.generateUHID();
-        const newPatient: Patient = {
-            ...patientData,
-            uhid,
-            registrationDate: new Date().toISOString(),
-            synced: 0,
-        };
+        const newPatient = { ...patientData, uhid, registrationDate: new Date().toISOString(), synced: 0 };
         await this.patients.add(newPatient);
         return uhid;
     }
@@ -362,15 +392,19 @@ class LiberiaHMSDatabase extends Dexie {
         return await this.patients.where("synced").equals(0).count();
     }
 
-    // ========== DOCTOR METHODS ==========
+    // ========== APPOINTMENT METHODS ==========
+    async getAppointmentsByDate(date: string): Promise<Appointment[]> {
+        return await this.appointments.where("date").equals(date).toArray();
+    }
+
     async getAllDoctors(): Promise<Doctor[]> {
         let doctors = await this.doctors.toArray();
         if (doctors.length === 0) {
             const defaultDoctors = [
-                { id: "doc1", name: "Dr. John Williams", specialty: "General Medicine", phone: "0888123456", email: "john@hospital.com", schedule: { monday: { start: "09:00", end: "17:00" } }, appointmentDuration: 30, maxAppointmentsPerDay: 20, synced: 1 },
-                { id: "doc2", name: "Dr. Sarah Johnson", specialty: "Pediatrics", phone: "0888123457", email: "sarah@hospital.com", schedule: { monday: { start: "09:00", end: "17:00" } }, appointmentDuration: 30, maxAppointmentsPerDay: 18, synced: 1 },
-                { id: "doc3", name: "Dr. Michael Brown", specialty: "Cardiology", phone: "0888123458", email: "michael@hospital.com", schedule: { monday: { start: "09:00", end: "17:00" } }, appointmentDuration: 45, maxAppointmentsPerDay: 12, synced: 1 },
-                { id: "doc4", name: "Dr. Patricia Davis", specialty: "Obstetrics & Gynecology", phone: "0888123459", email: "patricia@hospital.com", schedule: { monday: { start: "09:00", end: "17:00" } }, appointmentDuration: 30, maxAppointmentsPerDay: 16, synced: 1 },
+                { id: "doc1", name: "Dr. John Williams", specialty: "General Medicine", phone: "0888123456", email: "john@hospital.com", schedule: {}, appointmentDuration: 30, maxAppointmentsPerDay: 20, synced: 1 },
+                { id: "doc2", name: "Dr. Sarah Johnson", specialty: "Pediatrics", phone: "0888123457", email: "sarah@hospital.com", schedule: {}, appointmentDuration: 30, maxAppointmentsPerDay: 18, synced: 1 },
+                { id: "doc3", name: "Dr. Michael Brown", specialty: "Cardiology", phone: "0888123458", email: "michael@hospital.com", schedule: {}, appointmentDuration: 45, maxAppointmentsPerDay: 12, synced: 1 },
+                { id: "doc4", name: "Dr. Patricia Davis", specialty: "Obstetrics and Gynecology", phone: "0888123459", email: "patricia@hospital.com", schedule: {}, appointmentDuration: 30, maxAppointmentsPerDay: 16, synced: 1 }
             ];
             for (const doctor of defaultDoctors) {
                 const existing = await this.doctors.get(doctor.id);
@@ -385,28 +419,15 @@ class LiberiaHMSDatabase extends Dexie {
         await this.doctors.update(doctorId, { schedule, synced: 0 });
     }
 
-    // ========== APPOINTMENT METHODS ==========
-    async getAppointmentsByDate(date: string): Promise<Appointment[]> {
-        return await this.appointments.where("date").equals(date).toArray();
-    }
-
     async getAvailableTimeSlots(doctorId: string, date: string): Promise<string[]> {
         const slots = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00"];
-        const existingAppointments = await this.appointments
-            .where("doctorId").equals(doctorId)
-            .and(a => a.date === date && a.status === "scheduled")
-            .toArray();
+        const existingAppointments = await this.appointments.where("doctorId").equals(doctorId).and(a => a.date === date && a.status === "scheduled").toArray();
         const bookedTimes = new Set(existingAppointments.map(a => a.time));
         return slots.filter(slot => !bookedTimes.has(slot));
     }
 
     async addAppointment(appointmentData: any): Promise<number> {
-        const newAppointment: Appointment = {
-            ...appointmentData,
-            reminderSent: false,
-            createdAt: new Date().toISOString(),
-            synced: 0,
-        };
+        const newAppointment = { ...appointmentData, reminderSent: false, createdAt: new Date().toISOString(), synced: 0 };
         return await this.appointments.add(newAppointment);
     }
 
@@ -415,21 +436,16 @@ class LiberiaHMSDatabase extends Dexie {
     }
 
     async createRecurringAppointments(parentAppointment: any, endDate: string): Promise<void> {
-        console.log("Recurring appointments feature - would create series");
+        console.log("Recurring appointments feature placeholder");
     }
 
-    // ========== DRUG/PHARMACY METHODS ==========
+    // ========== DRUG METHODS ==========
     async getAllDrugs(): Promise<Drug[]> {
         return await this.drugs.toArray();
     }
 
     async addDrug(drugData: any): Promise<number> {
-        const newDrug: Drug = {
-            ...drugData,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            synced: 0,
-        };
+        const newDrug = { ...drugData, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), synced: 0 };
         return await this.drugs.add(newDrug);
     }
 
@@ -441,7 +457,8 @@ class LiberiaHMSDatabase extends Dexie {
         const threshold = new Date();
         threshold.setDate(threshold.getDate() + daysThreshold);
         const thresholdStr = threshold.toISOString().split('T')[0];
-        return await this.drugs.filter(d => d.expiryDate <= thresholdStr && d.expiryDate >= new Date().toISOString().split('T')[0]).toArray();
+        const today = new Date().toISOString().split('T')[0];
+        return await this.drugs.filter(d => d.expiryDate <= thresholdStr && d.expiryDate >= today).toArray();
     }
 
     async getExpiredDrugs(): Promise<Drug[]> {
@@ -466,9 +483,13 @@ class LiberiaHMSDatabase extends Dexie {
         return await this.dispensingRecords.where("patientUhid").equals(patientUhid).toArray();
     }
 
-    // ========== LABORATORY METHODS ==========
-    async getLabTests(): Promise<LabTest[]> {
-        return await this.labTests.toArray();
+    // ========== STAFF METHODS ==========
+    async getStaffByUsername(username: string): Promise<Staff | undefined> {
+        return await this.staff.where("username").equals(username).first();
+    }
+
+    async getAllStaff(): Promise<Staff[]> {
+        return await this.staff.toArray();
     }
 }
 
