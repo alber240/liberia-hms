@@ -8,6 +8,10 @@ import Appointments from '../pages/Appointments';
 import Pharmacy from '../pages/Pharmacy';
 import Laboratory from '../pages/Laboratory';
 import Billing from '../pages/Billing';
+import EMR from './EMR';
+import VitalSigns from './VitalSigns';
+import BedManagement from './BedManagement';
+import ReferralTransfer from './ReferralTransfer';
 import LanguageSwitcher from './LanguageSwitcher';
 import OfflineIndicator from './OfflineIndicator';
 import SyncButton from './SyncButton';
@@ -18,9 +22,9 @@ const AdminDashboard: React.FC = () => {
     const userRole = user?.role || '';
 
     const rolePermissions: Record<string, string[]> = {
-        admin: ['dashboard', 'staff', 'payroll', 'patients', 'appointments', 'pharmacy', 'laboratory', 'billing'],
-        doctor: ['dashboard', 'patients', 'appointments', 'pharmacy', 'laboratory'],
-        nurse: ['dashboard', 'patients', 'appointments'],
+        admin: ['dashboard', 'staff', 'payroll', 'patients', 'appointments', 'pharmacy', 'laboratory', 'billing', 'emr', 'vitals', 'beds', 'referral'],
+        doctor: ['dashboard', 'patients', 'appointments', 'pharmacy', 'laboratory', 'emr', 'vitals'],
+        nurse: ['dashboard', 'patients', 'appointments', 'vitals', 'beds'],
         pharmacist: ['dashboard', 'pharmacy'],
         lab_tech: ['dashboard', 'laboratory'],
         cashier: ['dashboard', 'billing'],
@@ -38,6 +42,7 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div style={{ minHeight: '100vh', background: '#e8f0fe' }}>
+            {/* Header */}
             <div style={{ background: '#0f2b3d', color: 'white', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
                     <h1 style={{ fontSize: '1.5rem' }}>🏥 LiberiaHMS</h1>
@@ -53,7 +58,8 @@ const AdminDashboard: React.FC = () => {
                 </div>
             </div>
 
-            <div style={{ background: 'white', borderBottom: '1px solid #cbd5e1', padding: '0 24px', display: 'flex', gap: '24px', overflowX: 'auto' }}>
+            {/* Navigation Tabs */}
+            <div style={{ background: 'white', borderBottom: '1px solid #cbd5e1', padding: '0 24px', display: 'flex', gap: '24px', overflowX: 'auto', flexWrap: 'wrap' }}>
                 {allowedTabs.includes('dashboard') && (
                     <button onClick={() => setActiveTab('dashboard')} style={{ padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: activeTab === 'dashboard' ? 'bold' : 'normal', borderBottom: activeTab === 'dashboard' ? '3px solid #0f2b3d' : 'none' }}>
                         📊 Dashboard
@@ -94,8 +100,29 @@ const AdminDashboard: React.FC = () => {
                         💰 Billing
                     </button>
                 )}
+                {allowedTabs.includes('emr') && (
+                    <button onClick={() => setActiveTab('emr')} style={{ padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: activeTab === 'emr' ? 'bold' : 'normal', borderBottom: activeTab === 'emr' ? '3px solid #0f2b3d' : 'none' }}>
+                        📋 EMR
+                    </button>
+                )}
+                {allowedTabs.includes('vitals') && (
+                    <button onClick={() => setActiveTab('vitals')} style={{ padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: activeTab === 'vitals' ? 'bold' : 'normal', borderBottom: activeTab === 'vitals' ? '3px solid #0f2b3d' : 'none' }}>
+                        🩺 Vital Signs
+                    </button>
+                )}
+                {allowedTabs.includes('beds') && (
+                    <button onClick={() => setActiveTab('beds')} style={{ padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: activeTab === 'beds' ? 'bold' : 'normal', borderBottom: activeTab === 'beds' ? '3px solid #0f2b3d' : 'none' }}>
+                        🛏️ Beds
+                    </button>
+                )}
+                {allowedTabs.includes('referral') && (
+                    <button onClick={() => setActiveTab('referral')} style={{ padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: activeTab === 'referral' ? 'bold' : 'normal', borderBottom: activeTab === 'referral' ? '3px solid #0f2b3d' : 'none' }}>
+                        🔄 Referral
+                    </button>
+                )}
             </div>
 
+            {/* Content */}
             <div style={{ padding: '24px' }}>
                 {activeTab === 'dashboard' && <Dashboard />}
                 {activeTab === 'staff' && <StaffManagement />}
@@ -105,6 +132,10 @@ const AdminDashboard: React.FC = () => {
                 {activeTab === 'pharmacy' && <Pharmacy />}
                 {activeTab === 'laboratory' && <Laboratory />}
                 {activeTab === 'billing' && <Billing />}
+                {activeTab === 'emr' && <EMR />}
+                {activeTab === 'vitals' && <VitalSigns />}
+                {activeTab === 'beds' && <BedManagement />}
+                {activeTab === 'referral' && <ReferralTransfer />}
             </div>
         </div>
     );

@@ -331,6 +331,11 @@ class LiberiaHMSDatabase extends Dexie {
     attendance!: Table<Attendance, number>;
     payroll!: Table<Payroll, number>;
     syncQueue!: Table<SyncQueue, number>;
+    soapNotes!: Table<SOAPNote, number>;
+    allergies!: Table<Allergy, number>;
+    medicalHistory!: Table<MedicalHistory, number>;
+    medications!: Table<Medication, number>;
+    vitalSigns!: Table<VitalSign, number>;
 
     constructor() {
         super("LiberiaHMSDB");
@@ -354,6 +359,11 @@ class LiberiaHMSDatabase extends Dexie {
             attendance: "++id, staffId, date, status, synced",
             payroll: "++id, staffId, period, status, synced",
             syncQueue: "++id, operation, timestamp",
+            soapNotes: "++id, patientUhid, doctorId, date, status, synced",
+            allergies: "++id, patientUhid, severity, synced",
+            medicalHistory: "++id, patientUhid, condition, status, synced",
+            medications: "++id, patientUhid, status, synced",
+            vitalSigns: "++id, patientUhid, recordedAt, synced"
         });
     }
 
@@ -494,3 +504,78 @@ class LiberiaHMSDatabase extends Dexie {
 }
 
 export const db = new LiberiaHMSDatabase();
+
+// EMR Interfaces
+export interface SOAPNote {
+    id?: number;
+    patientUhid: string;
+    patientName: string;
+    doctorId: string;
+    doctorName: string;
+    date: string;
+    subjective: string;  // What patient says
+    objective: string;   // What doctor observes/examines
+    assessment: string;  // Diagnosis
+    plan: string;        // Treatment plan
+    followUpDate?: string;
+    status: "draft" | "final" | "amended";
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+    synced: number;
+}
+
+export interface Allergy {
+    id?: number;
+    patientUhid: string;
+    allergen: string;
+    reaction: string;
+    severity: "mild" | "moderate" | "severe";
+    diagnosedDate: string;
+    notes: string;
+    synced: number;
+}
+
+export interface MedicalHistory {
+    id?: number;
+    patientUhid: string;
+    condition: string;
+    diagnosedDate: string;
+    status: "active" | "resolved" | "managed";
+    notes: string;
+    synced: number;
+}
+
+export interface Medication {
+    id?: number;
+    patientUhid: string;
+    drugName: string;
+    dosage: string;
+    frequency: string;
+    startDate: string;
+    endDate?: string;
+    prescribedBy: string;
+    status: "active" | "completed" | "discontinued";
+    notes: string;
+    synced: number;
+}
+
+export interface VitalSign {
+    id?: number;
+    patientUhid: string;
+    patientName: string;
+    recordedBy: string;
+    recordedAt: string;
+    bloodPressureSystolic?: number;
+    bloodPressureDiastolic?: number;
+    pulse?: number;
+    temperature?: number;
+    respiratoryRate?: number;
+    oxygenSaturation?: number;
+    weight?: number;
+    height?: number;
+    bmi?: number;
+    notes: string;
+    synced: number;
+}
+
