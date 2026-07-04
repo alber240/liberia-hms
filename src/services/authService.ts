@@ -3,9 +3,11 @@
 export interface AuthUser {
     id: number;
     staffId: string;
+    username: string;
     name: string;
     role: string;
     department: string;
+    mustChangePassword: boolean;
 }
 
 class AuthService {
@@ -26,12 +28,14 @@ class AuthService {
             return { success: false, message: 'Invalid password' };
         }
         
-        const user: AuthUser = {
+                const user: AuthUser = {
             id: staff.id!,
             staffId: staff.staffId,
+            username: staff.username,
             name: staff.name,
             role: staff.role,
-            department: staff.department
+            department: staff.department,
+            mustChangePassword: staff.mustChangePassword || false
         };
         
         this.currentUser = user;
@@ -79,3 +83,4 @@ class AuthService {
 }
 
 export const authService = new AuthService();
+

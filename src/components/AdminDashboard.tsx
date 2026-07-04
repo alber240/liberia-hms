@@ -16,7 +16,11 @@ import LanguageSwitcher from './LanguageSwitcher';
 import OfflineIndicator from './OfflineIndicator';
 import SyncButton from './SyncButton';
 
-const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+    onLogout: () => void;
+}
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const user = authService.getCurrentUser();
     const userRole = user?.role || '';
@@ -24,7 +28,7 @@ const AdminDashboard: React.FC = () => {
     const rolePermissions: Record<string, string[]> = {
         admin: ['dashboard', 'staff', 'payroll', 'patients', 'appointments', 'pharmacy', 'laboratory', 'billing', 'emr', 'vitals', 'beds', 'referral'],
         doctor: ['dashboard', 'patients', 'appointments', 'pharmacy', 'laboratory', 'emr', 'vitals'],
-        nurse: ['dashboard', 'patients', 'appointments', 'vitals', 'beds'],
+        nurse: ['dashboard', 'patients', 'appointments', 'pharmacy', 'laboratory', 'vitals', 'beds', 'referral'],
         pharmacist: ['dashboard', 'pharmacy'],
         lab_tech: ['dashboard', 'laboratory'],
         cashier: ['dashboard', 'billing'],
@@ -142,3 +146,8 @@ const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
+
+
+
+
+

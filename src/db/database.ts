@@ -263,6 +263,18 @@ export interface Staff {
     qualifications: string;
     createdAt: string;
     synced: number;
+    // Security fields
+    mustChangePassword: boolean;
+    lastPasswordChange: string;
+    passwordHistory: string;
+    failedLoginAttempts: number;
+    lockedUntil: string;
+    lastLoginAt: string;
+    lastLoginIP: string;
+    isActive: boolean;
+    deactivatedAt: string;
+    deactivatedBy: string;
+    deactivationReason: string;
 }
 
 export interface Attendance {
@@ -303,6 +315,56 @@ export interface Payroll {
     synced: number;
 }
 
+export interface PayrollItem {
+    id?: number;
+    payrollId: number;
+    staffId: number;
+    type: "allowance" | "deduction" | "tax" | "bonus" | "overtime" | "other";
+    description: string;
+    amount: number;
+    currency: "USD" | "LRD";
+    synced: number;
+}
+
+// EMR Interfaces
+export interface SOAPNote {
+    id?: number;
+    patientUhid: string;
+    patientName: string;
+    doctorId: string;
+    doctorName: string;
+    date: string;
+    subjective: string;
+    objective: string;
+    assessment: string;
+    plan: string;
+    followUpDate?: string;
+    status: "draft" | "final" | "amended";
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+    synced: number;
+}
+
+export interface VitalSign {
+    id?: number;
+    patientUhid: string;
+    patientName: string;
+    recordedBy: string;
+    recordedAt: string;
+    bloodPressureSystolic?: number;
+    bloodPressureDiastolic?: number;
+    pulse?: number;
+    temperature?: number;
+    respiratoryRate?: number;
+    oxygenSaturation?: number;
+    weight?: number;
+    height?: number;
+    bmi?: number;
+    notes: string;
+    synced: number;
+}
+
 export interface SyncQueue {
     id?: number;
     operation: "CREATE" | "UPDATE" | "DELETE";
@@ -330,16 +392,14 @@ class LiberiaHMSDatabase extends Dexie {
     staff!: Table<Staff, number>;
     attendance!: Table<Attendance, number>;
     payroll!: Table<Payroll, number>;
-    syncQueue!: Table<SyncQueue, number>;
+    payrollItems!: Table<PayrollItem, number>;
     soapNotes!: Table<SOAPNote, number>;
-    allergies!: Table<Allergy, number>;
-    medicalHistory!: Table<MedicalHistory, number>;
-    medications!: Table<Medication, number>;
     vitalSigns!: Table<VitalSign, number>;
+    syncQueue!: Table<SyncQueue, number>;
 
     constructor() {
         super("LiberiaHMSDB");
-        this.version(10).stores({
+        this.version(11).stores({
             patients: "uhid, fullName, phone, registrationDate, synced",
             doctors: "id, name, specialty, synced",
             appointments: "++id, patientUhid, doctorId, date, time, status, reminderSent, isRecurring, parentAppointmentId, synced",
@@ -358,12 +418,10 @@ class LiberiaHMSDatabase extends Dexie {
             staff: "++id, staffId, username, role, status, synced",
             attendance: "++id, staffId, date, status, synced",
             payroll: "++id, staffId, period, status, synced",
-            syncQueue: "++id, operation, timestamp",
+            payrollItems: "++id, payrollId, staffId, type, synced",
             soapNotes: "++id, patientUhid, doctorId, date, status, synced",
-            allergies: "++id, patientUhid, severity, synced",
-            medicalHistory: "++id, patientUhid, condition, status, synced",
-            medications: "++id, patientUhid, status, synced",
-            vitalSigns: "++id, patientUhid, recordedAt, synced"
+            vitalSigns: "++id, patientUhid, recordedAt, synced",
+            syncQueue: "++id, operation, timestamp",
         });
     }
 
@@ -501,81 +559,53 @@ class LiberiaHMSDatabase extends Dexie {
     async getAllStaff(): Promise<Staff[]> {
         return await this.staff.toArray();
     }
+
+    // ========== PAYROLL METHODS ==========
+    async getPayrollByPeriod(period: string): Promise<Payroll[]> {
+        return await this.payroll.where("period").equals(period).toArray();
+    }
+
+    async getPayrollItems(payrollId: number): Promise<PayrollItem[]> {
+        return await this.payrollItems.where("payrollId").equals(payrollId).toArray();
+    }
+
+        async updatePayrollTotals(payrollId: number): Promise<void> {
+        const items = await this.payrollItems.where("payrollId").equals(payrollId).toArray();
+        const payroll = await this.payroll.get(payrollId);
+        
+        if (payroll) {
+            let totalAllowances = 0;
+            let totalDeductions = 0;
+            let totalTax = 0;
+            let totalBonuses = 0;
+
+            for (const item of items) {
+                switch(item.type) {
+                    case 'allowance': totalAllowances += item.amount; break;
+                    case 'bonus': totalBonuses += item.amount; break;
+                    case 'deduction': totalDeductions += item.amount; break;
+                    case 'tax': totalTax += item.amount; break;
+                    case 'overtime': totalAllowances += item.amount; break;
+                    default: break;
+                }
+            }
+
+            const grossPay = payroll.baseSalary + totalAllowances + totalBonuses;
+            const totalDeductionsAmount = totalDeductions + totalTax;
+            const netPay = grossPay - totalDeductionsAmount;
+
+            await this.payroll.update(payrollId, {
+                grossPay: grossPay,
+                deductions: totalDeductionsAmount,
+                tax: totalTax,
+                allowances: totalAllowances,
+                bonuses: totalBonuses,
+                netPay: netPay,
+                synced: 0
+            });
+        }
+    }
 }
 
 export const db = new LiberiaHMSDatabase();
-
-// EMR Interfaces
-export interface SOAPNote {
-    id?: number;
-    patientUhid: string;
-    patientName: string;
-    doctorId: string;
-    doctorName: string;
-    date: string;
-    subjective: string;  // What patient says
-    objective: string;   // What doctor observes/examines
-    assessment: string;  // Diagnosis
-    plan: string;        // Treatment plan
-    followUpDate?: string;
-    status: "draft" | "final" | "amended";
-    createdBy: string;
-    createdAt: string;
-    updatedAt: string;
-    synced: number;
-}
-
-export interface Allergy {
-    id?: number;
-    patientUhid: string;
-    allergen: string;
-    reaction: string;
-    severity: "mild" | "moderate" | "severe";
-    diagnosedDate: string;
-    notes: string;
-    synced: number;
-}
-
-export interface MedicalHistory {
-    id?: number;
-    patientUhid: string;
-    condition: string;
-    diagnosedDate: string;
-    status: "active" | "resolved" | "managed";
-    notes: string;
-    synced: number;
-}
-
-export interface Medication {
-    id?: number;
-    patientUhid: string;
-    drugName: string;
-    dosage: string;
-    frequency: string;
-    startDate: string;
-    endDate?: string;
-    prescribedBy: string;
-    status: "active" | "completed" | "discontinued";
-    notes: string;
-    synced: number;
-}
-
-export interface VitalSign {
-    id?: number;
-    patientUhid: string;
-    patientName: string;
-    recordedBy: string;
-    recordedAt: string;
-    bloodPressureSystolic?: number;
-    bloodPressureDiastolic?: number;
-    pulse?: number;
-    temperature?: number;
-    respiratoryRate?: number;
-    oxygenSaturation?: number;
-    weight?: number;
-    height?: number;
-    bmi?: number;
-    notes: string;
-    synced: number;
-}
 

@@ -1,8 +1,8 @@
 ﻿import React, { useState } from 'react';
-import { authService } from '../services/authService';
+import { secureAuthService } from '../services/secureAuthService';
 
 interface LoginProps {
-    onLoginSuccess: () => void;
+    onLoginSuccess: (user: any, mustChangePassword: boolean) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
@@ -16,10 +16,10 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         setLoading(true);
         setError('');
         
-        const result = await authService.login(username, password);
+        const result = await secureAuthService.login(username, password, 'localhost');
         
-        if (result.success) {
-            onLoginSuccess();
+        if (result.success && result.user) {
+            onLoginSuccess(result.user, result.mustChangePassword || false);
         } else {
             setError(result.message);
         }
@@ -28,21 +28,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#e8f0fe'
-        }}>
-            <div style={{
-                background: 'white',
-                padding: '40px',
-                borderRadius: '16px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                width: '100%',
-                maxWidth: '400px'
-            }}>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e8f0fe' }}>
+            <div style={{ background: 'white', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
                     <h1 style={{ fontSize: '2rem', color: '#0f2b3d' }}>🏥 LiberiaHMS</h1>
                     <p style={{ color: '#6b7280' }}>Hospital Management System</p>
@@ -50,13 +37,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 
                 <form onSubmit={handleSubmit}>
                     {error && (
-                        <div style={{
-                            background: '#fee2e2',
-                            color: '#991b1b',
-                            padding: '12px',
-                            borderRadius: '8px',
-                            marginBottom: '16px'
-                        }}>
+                        <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
                             {error}
                         </div>
                     )}
@@ -68,13 +49,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
-                            style={{
-                                width: '100%',
-                                padding: '10px',
-                                borderRadius: '8px',
-                                border: '1px solid #cbd5e1',
-                                fontSize: '1rem'
-                            }}
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem' }}
                             placeholder="Enter your username"
                         />
                     </div>
@@ -86,13 +61,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            style={{
-                                width: '100%',
-                                padding: '10px',
-                                borderRadius: '8px',
-                                border: '1px solid #cbd5e1',
-                                fontSize: '1rem'
-                            }}
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem' }}
                             placeholder="Enter your password"
                         />
                     </div>
@@ -100,17 +69,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     <button
                         type="submit"
                         disabled={loading}
-                        style={{
-                            width: '100%',
-                            background: '#0f2b3d',
-                            color: 'white',
-                            padding: '12px',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
-                        }}
+                        style={{ width: '100%', background: '#0f2b3d', color: 'white', padding: '12px', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer' }}
                     >
                         {loading ? 'Logging in...' : 'Login'}
                     </button>
@@ -121,6 +80,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     <p>Admin: admin / admin123</p>
                     <p>Doctor: doctor / doctor123</p>
                     <p>Nurse: nurse / nurse123</p>
+                    <p>Receptionist: receptionist / reception123</p>
                 </div>
             </div>
         </div>

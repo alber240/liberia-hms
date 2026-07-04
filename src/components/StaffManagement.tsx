@@ -31,7 +31,18 @@ const StaffManagement: React.FC = () => {
         status: 'active' as 'active' | 'on_leave' | 'terminated',
         qualifications: '',
         createdAt: new Date().toISOString(),
-        synced: 0
+        synced: 0,
+        mustChangePassword: true,
+        lastPasswordChange: '',
+        passwordHistory: '',
+        failedLoginAttempts: 0,
+        lockedUntil: '',
+        lastLoginAt: '',
+        lastLoginIP: '',
+        isActive: true,
+        deactivatedAt: '',
+        deactivatedBy: '',
+        deactivationReason: ''
     });
 
     useEffect(() => {
@@ -49,14 +60,34 @@ const StaffManagement: React.FC = () => {
         return `EMP-${year}-${random}`;
     };
 
+    const generateTempPassword = () => {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+        let password = '';
+        for (let i = 0; i < 10; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return password + '@2024';
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
+        const tempPassword = !editingStaff ? generateTempPassword() : '';
+        
         if (editingStaff) {
             await db.staff.update(editingStaff.id!, { ...formData, synced: 0 });
+            alert('Staff updated successfully');
         } else {
-            const newStaff = { ...formData, staffId: generateStaffId(), createdAt: new Date().toISOString(), synced: 0 };
+            const newStaff = { 
+                ...formData, 
+                staffId: generateStaffId(), 
+                password: tempPassword,
+                mustChangePassword: true,
+                createdAt: new Date().toISOString(), 
+                synced: 0 
+            };
             await db.staff.add(newStaff);
+            alert(`Staff added successfully!\nTemporary Password: ${tempPassword}\nPlease provide this to the staff member. They must change it on first login.`);
         }
         
         setShowAddForm(false);
@@ -66,43 +97,69 @@ const StaffManagement: React.FC = () => {
             licenseNumber: '', phone: '', email: '', address: '', emergencyContact: '', emergencyPhone: '',
             salary: 0, salaryCurrency: 'USD', paySchedule: 'monthly', bankName: '', accountNumber: '',
             startDate: new Date().toISOString().split('T')[0], status: 'active', qualifications: '',
-            createdAt: '', synced: 0
+            createdAt: '', synced: 0, mustChangePassword: true, lastPasswordChange: '', passwordHistory: '',
+            failedLoginAttempts: 0, lockedUntil: '', lastLoginAt: '', lastLoginIP: '', isActive: true,
+            deactivatedAt: '', deactivatedBy: '', deactivationReason: ''
         });
         await loadStaff();
     };
 
-        const handleEdit = (staffMember: Staff) => {
+    const handleEdit = (staffMember: Staff) => {
         setEditingStaff(staffMember);
-        setFormData({
-            staffId: staffMember.staffId || '',
-            username: staffMember.username || '',
-            password: '',
-            name: staffMember.name || '',
-            role: staffMember.role,
-            department: staffMember.department || '',
-            licenseNumber: staffMember.licenseNumber || '',
-            phone: staffMember.phone || '',
-            email: staffMember.email || '',
-            address: staffMember.address || '',
-            emergencyContact: staffMember.emergencyContact || '',
-            emergencyPhone: staffMember.emergencyPhone || '',
-            salary: staffMember.salary || 0,
-            salaryCurrency: staffMember.salaryCurrency || 'USD',
-            paySchedule: staffMember.paySchedule || 'monthly',
-            bankName: staffMember.bankName || '',
-            accountNumber: staffMember.accountNumber || '',
-            startDate: staffMember.startDate || new Date().toISOString().split('T')[0],
-            status: staffMember.status || 'active',
-            qualifications: staffMember.qualifications || '',
-            createdAt: staffMember.createdAt || new Date().toISOString(),
-            synced: staffMember.synced || 0
-        });
+        setFormData(staffMember as any);
         setShowAddForm(true);
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Delete this staff member?')) {
+    const handleDelete = async (id: number, name: string) => {
+        if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
             await db.staff.delete(id);
+            alert(`${name} has been deleted.`);
+            await loadStaff();
+        }
+    };
+
+    const resetPassword = async (id: number, name: string) => {
+        if (window.confirm(`Reset password for ${name}?`)) {
+            const tempPassword = generateTempPassword();
+            await db.staff.update(id, { 
+                password: tempPassword, 
+                mustChangePassword: true,
+                failedLoginAttempts: 0,
+                lockedUntil: '',
+                synced: 0 
+            });
+            alert(`Password reset for ${name}\nTemporary Password: ${tempPassword}\nThey must change it on next login.`);
+            await loadStaff();
+        }
+    };
+
+    const deactivateStaff = async (id: number, name: string) => {
+        const reason = prompt(`Reason for deactivating ${name}? (e.g., Resigned, Terminated, Left without notice)`);
+        if (reason) {
+            const admin = authService.getCurrentUser();
+            await db.staff.update(id, {
+                status: 'terminated',
+                isActive: false,
+                deactivatedAt: new Date().toISOString(),
+                deactivatedBy: admin?.name || 'Admin',
+                deactivationReason: reason,
+                synced: 0
+            });
+            alert(`${name} has been deactivated. They can no longer access the system.`);
+            await loadStaff();
+        }
+    };
+
+    const reactivateStaff = async (id: number, name: string) => {
+        if (window.confirm(`Reactivate ${name}?`)) {
+            await db.staff.update(id, {
+                status: 'active',
+                isActive: true,
+                failedLoginAttempts: 0,
+                lockedUntil: '',
+                synced: 0
+            });
+            alert(`${name} has been reactivated.`);
             await loadStaff();
         }
     };
@@ -134,7 +191,7 @@ const StaffManagement: React.FC = () => {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
                         <div><label>Full Name *</label><input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }} /></div>
                         <div><label>Username *</label><input type="text" required value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }} /></div>
-                        {!editingStaff && <div><label>Password *</label><input type="password" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }} /></div>}
+                        {!editingStaff && <div><label>Password</label><input type="text" disabled value="Auto-generated" style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f3f4f6' }} /></div>}
                         <div><label>Role *</label><select value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value as any})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>{roles.map(r => <option key={r} value={r}>{r.toUpperCase()}</option>)}</select></div>
                         <div><label>Department</label><select value={formData.department} onChange={(e) => setFormData({...formData, department: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}><option value="">Select</option>{departments.map(d => <option key={d} value={d}>{d}</option>)}</select></div>
                         <div><label>Phone</label><input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }} /></div>
@@ -154,19 +211,41 @@ const StaffManagement: React.FC = () => {
             <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '12px', overflow: 'hidden' }}>
                     <thead style={{ background: '#f1f5f9' }}>
-                        <tr><th style={{ padding: '12px' }}>Staff ID</th><th>Name</th><th>Role</th><th>Department</th><th>Phone</th><th>Salary</th><th>Status</th><th>Actions</th></tr>
+                        <tr>
+                            <th style={{ padding: '12px' }}>Staff ID</th>
+                            <th style={{ padding: '12px' }}>Name</th>
+                            <th style={{ padding: '12px' }}>Role</th>
+                            <th style={{ padding: '12px' }}>Department</th>
+                            <th style={{ padding: '12px' }}>Phone</th>
+                            <th style={{ padding: '12px' }}>Salary</th>
+                            <th style={{ padding: '12px' }}>Status</th>
+                            <th style={{ padding: '12px' }}>Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        {staff.map(member => (
+                        {staff.map((member) => (
                             <tr key={member.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                                 <td style={{ padding: '12px' }}>{member.staffId}</td>
                                 <td style={{ padding: '12px' }}><strong>{member.name}</strong><br /><span style={{ fontSize: '0.7rem', color: '#6b7280' }}>{member.username}</span></td>
                                 <td style={{ padding: '12px' }}><span style={{ background: getRoleColor(member.role), color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '0.7rem' }}>{member.role}</span></td>
                                 <td style={{ padding: '12px' }}>{member.department}</td>
                                 <td style={{ padding: '12px' }}>{member.phone}</td>
-                                <td style={{ padding: '12px' }}>{member.salaryCurrency} {member.salary.toLocaleString()} </td>
-                                <td style={{ padding: '12px' }}><span style={{ color: member.status === 'active' ? '#10b981' : '#f59e0b' }}>{member.status}</span></td>
-                                <td style={{ padding: '12px' }}><button onClick={() => handleEdit(member)} style={{ marginRight: '8px', background: '#6b7280', color: 'white', padding: '4px 8px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Edit</button><button onClick={() => handleDelete(member.id!)} style={{ background: '#ef4444', color: 'white', padding: '4px 8px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Delete</button></td>
+                                <td style={{ padding: '12px' }}>{member.salaryCurrency} {member.salary.toLocaleString()}</td>
+                                <td style={{ padding: '12px' }}>
+                                    <span style={{ color: member.status === 'active' ? '#10b981' : member.status === 'on_leave' ? '#f59e0b' : '#ef4444', fontWeight: 'bold' }}>
+                                        {member.status}
+                                    </span>
+                                </td>
+                                <td style={{ padding: '12px' }}>
+                                    <button onClick={() => handleEdit(member)} style={{ background: '#6b7280', color: 'white', padding: '4px 8px', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '4px' }}>Edit</button>
+                                    <button onClick={() => handleDelete(member.id!, member.name)} style={{ background: '#dc2626', color: 'white', padding: '4px 8px', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '4px' }}>Delete</button>
+                                    <button onClick={() => resetPassword(member.id!, member.name)} style={{ background: '#f59e0b', color: 'white', padding: '4px 8px', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '4px' }}>Reset Pwd</button>
+                                    {member.status === 'active' ? (
+                                        <button onClick={() => deactivateStaff(member.id!, member.name)} style={{ background: '#dc2626', color: 'white', padding: '4px 8px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Deactivate</button>
+                                    ) : (
+                                        <button onClick={() => reactivateStaff(member.id!, member.name)} style={{ background: '#10b981', color: 'white', padding: '4px 8px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Reactivate</button>
+                                    )}
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -177,4 +256,3 @@ const StaffManagement: React.FC = () => {
 };
 
 export default StaffManagement;
-
