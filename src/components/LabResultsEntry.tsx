@@ -27,16 +27,51 @@ const LabResultsEntry: React.FC = () => {
     const updateResult = (itemId: number, value: string) => { setResults(prev => ({ ...prev, [itemId]: value })); };
 
     const isAbnormal = (result: string, normalRange: string): boolean => {
-        if (!result || !normalRange) return false;
-        const range = normalRange.match(/([\d.]+)\s*-\s*([\d.]+)/);
-        if (range && result) {
-            const value = parseFloat(result);
-            const min = parseFloat(range[1]);
-            const max = parseFloat(range[2]);
-            if (!isNaN(value) && (value < min || value > max)) return true;
+    if (!result || !normalRange) return false;
+    
+    const resultLower = result.trim().toLowerCase();
+    const rangeLower = normalRange.trim().toLowerCase();
+    
+    // Handle qualitative results (Negative/Positive, Reactive/Non-Reactive)
+    if (rangeLower.includes('negative') || rangeLower.includes('non-reactive') || rangeLower.includes('normal')) {
+        return resultLower.includes('positive') || 
+               resultLower.includes('reactive') || 
+               resultLower.includes('abnormal');
+    }
+    
+    if (rangeLower.includes('positive') || rangeLower.includes('reactive')) {
+        return resultLower.includes('negative') || resultLower.includes('non-reactive');
+    }
+    
+    // Handle numeric ranges (e.g., "70-100")
+    const rangeMatch = rangeLower.match(/([\d.]+)\s*-\s*([\d.]+)/);
+    if (rangeMatch) {
+        const value = parseFloat(result);
+        const min = parseFloat(rangeMatch[1]);
+        const max = parseFloat(rangeMatch[2]);
+        
+        if (!isNaN(value)) {
+            return value < min || value > max;
         }
-        return false;
-    };
+    }
+    
+    // Handle less than / greater than
+    const lessThanMatch = rangeLower.match(/<\s*([\d.]+)/);
+    if (lessThanMatch) {
+        const value = parseFloat(result);
+        const max = parseFloat(lessThanMatch[1]);
+        if (!isNaN(value)) return value >= max;
+    }
+    
+    const greaterThanMatch = rangeLower.match(/>\s*([\d.]+)/);
+    if (greaterThanMatch) {
+        const value = parseFloat(result);
+        const min = parseFloat(greaterThanMatch[1]);
+        if (!isNaN(value)) return value <= min;
+    }
+    
+    return false;
+};
 
     const saveResults = async () => {
         for (const item of orderItems) {

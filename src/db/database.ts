@@ -480,7 +480,7 @@ class LiberiaHMSDatabase extends Dexie {
             }
             doctors = await this.doctors.toArray();
         }
-        return doctors;
+        return await this.doctors.toArray();
     }
 
     async updateDoctorSchedule(doctorId: string, schedule: any): Promise<void> {

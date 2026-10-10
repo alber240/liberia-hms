@@ -45,26 +45,72 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
         }
     }, [formData.doctorId, selectedDate, appointments]);
 
-    const loadAppointments = async () => {
-        const apps = await db.getAppointmentsByDate(selectedDate);
-        setAppointments(apps);
-    };
-
+    // âœ… SAFE LOAD DOCTORS - no duplicates
     const loadDoctors = async () => {
-        const docs = await db.getAllDoctors();
-        setDoctors(docs);
+    try {
+        // Just load existing doctors, no auto-creation here
+        const docs = await db.doctors.toArray();
+        
+        if (docs.length === 0) {
+            // Create defaults ONE TIME
+            const defaultDoctors = [
+                { id: "doc1", name: "Dr. John Williams", specialty: "General Medicine", phone: "0888123456", email: "john@hospital.com", schedule: {}, appointmentDuration: 30, maxAppointmentsPerDay: 20, synced: 1 },
+                { id: "doc2", name: "Dr. Sarah Johnson", specialty: "Pediatrics", phone: "0888123457", email: "sarah@hospital.com", schedule: {}, appointmentDuration: 30, maxAppointmentsPerDay: 18, synced: 1 },
+                { id: "doc3", name: "Dr. Michael Brown", specialty: "Cardiology", phone: "0888123458", email: "michael@hospital.com", schedule: {}, appointmentDuration: 45, maxAppointmentsPerDay: 12, synced: 1 },
+                { id: "doc4", name: "Dr. Patricia Davis", specialty: "Obstetrics and Gynecology", phone: "0888123459", email: "patricia@hospital.com", schedule: {}, appointmentDuration: 30, maxAppointmentsPerDay: 16, synced: 1 }
+            ];
+            
+            for (const doctor of defaultDoctors) {
+                try {
+                    const existing = await db.doctors.get(doctor.id);
+                    if (!existing) {
+                        await db.doctors.add(doctor);
+                    }
+                } catch (err) {
+                    // Ignore - another render already added it
+                    console.log(`Doctor ${doctor.id} already added`);
+                }
+            }
+            
+            const updatedDocs = await db.doctors.toArray();
+            setDoctors(updatedDocs);
+        } else {
+            setDoctors(docs);
+        }
+    } catch (error) {
+        console.error("Error loading doctors:", error);
+    }
+};
+
+    const loadAppointments = async () => {
+        try {
+            const apps = await db.getAppointmentsByDate(selectedDate);
+            setAppointments(apps);
+        } catch (error) {
+            console.error("Error loading appointments:", error);
+            setAppointments([]);
+        }
     };
 
     const loadPatients = async () => {
-        const pts = await db.getAllPatients();
-        setPatients(pts);
+        try {
+            const pts = await db.getAllPatients();
+            setPatients(pts);
+        } catch (error) {
+            console.error("Error loading patients:", error);
+            setPatients([]);
+        }
     };
 
     const loadAvailableTimeSlots = async () => {
-        const slots = await db.getAvailableTimeSlots(formData.doctorId, selectedDate);
-        setAvailableTimeSlots(slots);
-        if (slots.length > 0 && !formData.time) {
-            setFormData(prev => ({ ...prev, time: slots[0] }));
+        try {
+            const slots = await db.getAvailableTimeSlots(formData.doctorId, selectedDate);
+            setAvailableTimeSlots(slots);
+            if (slots.length > 0 && !formData.time) {
+                setFormData(prev => ({ ...prev, time: slots[0] }));
+            }
+        } catch (error) {
+            console.error("Error loading time slots:", error);
         }
     };
 
@@ -117,7 +163,6 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
         
         const id = await db.addAppointment(appointmentData);
         
-        // If recurring, create future appointments
         if (formData.isRecurring && formData.recurringEndDate) {
             const parentAppointment = { ...appointmentData, id };
             await db.createRecurringAppointments(parentAppointment as Appointment, formData.recurringEndDate);
@@ -156,13 +201,13 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                         onClick={() => setShowScheduleManager(!showScheduleManager)}
                         style={{ background: '#6b7280', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                     >
-                        ?? {t('doctor.manageSchedule')}
+                        ðŸ“… Manage Schedule
                     </button>
                     <button
                         onClick={() => setShowBookingForm(!showBookingForm)}
                         style={{ background: '#0f2b3d', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                     >
-                        + {t('appointment.book')}
+                        + Book Appointment
                     </button>
                 </div>
             </div>
@@ -175,10 +220,10 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
 
             {showBookingForm && (
                 <form onSubmit={handleBookAppointment} style={{ background: 'white', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
-                    <h3>{t('appointment.bookNew')}</h3>
+                    <h3>Book New Appointment</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                         <div>
-                            <label>{t('appointment.selectPatient')} *</label>
+                            <label>Select Patient *</label>
                             <select
                                 required
                                 value={formData.patientUhid}
@@ -192,7 +237,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                             </select>
                         </div>
                         <div>
-                            <label>{t('appointment.selectDoctor')} *</label>
+                            <label>Select Doctor *</label>
                             <select
                                 required
                                 value={formData.doctorId}
@@ -206,7 +251,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                             </select>
                         </div>
                         <div>
-                            <label>{t('appointment.time')} *</label>
+                            <label>Time *</label>
                             <select
                                 required
                                 value={formData.time}
@@ -215,14 +260,9 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                             >
                                 {timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
-                            {availableTimeSlots.length === 0 && formData.doctorId && (
-                                <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px' }}>
-                                    No available slots for this doctor on selected date
-                                </p>
-                            )}
                         </div>
                         <div>
-                            <label>{t('appointment.purpose')}</label>
+                            <label>Purpose</label>
                             <input
                                 type="text"
                                 value={formData.purpose}
@@ -231,43 +271,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                             />
                         </div>
                         <div>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={formData.isRecurring}
-                                    onChange={(e) => setFormData({ ...formData, isRecurring: e.target.checked })}
-                                />
-                                {' '}{t('appointment.recurring')}
-                            </label>
-                        </div>
-                        {formData.isRecurring && (
-                            <>
-                                <div>
-                                    <label>{t('appointment.recurringPattern')}</label>
-                                    <select
-                                        value={formData.recurringPattern}
-                                        onChange={(e) => setFormData({ ...formData, recurringPattern: e.target.value as any })}
-                                        style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                                    >
-                                        <option value="daily">Daily</option>
-                                        <option value="weekly">Weekly</option>
-                                        <option value="monthly">Monthly</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>{t('appointment.recurringEndDate')}</label>
-                                    <input
-                                        type="date"
-                                        required={formData.isRecurring}
-                                        value={formData.recurringEndDate}
-                                        onChange={(e) => setFormData({ ...formData, recurringEndDate: e.target.value })}
-                                        style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                                    />
-                                </div>
-                            </>
-                        )}
-                        <div>
-                            <label>{t('appointment.notes')}</label>
+                            <label>Notes</label>
                             <textarea
                                 value={formData.notes}
                                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -278,10 +282,10 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                     </div>
                     <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                         <button type="submit" style={{ background: '#0f2b3d', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                            {t('appointment.book')}
+                            Book Appointment
                         </button>
                         <button type="button" onClick={() => setShowBookingForm(false)} style={{ background: '#e2e8f0', padding: '10px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                            {t('common.cancel')}
+                            Cancel
                         </button>
                     </div>
                 </form>
@@ -291,12 +295,11 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ background: '#f1f5f9' }}>
                         <tr>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>{t('appointment.time')}</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>{t('appointment.patient')}</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>{t('appointment.doctor')}</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>{t('appointment.purpose')}</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>{t('appointment.status')}</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>{t('common.actions')}</th>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Time</th>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Patient</th>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Doctor</th>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Purpose</th>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -305,12 +308,9 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                             return (
                                 <tr key={slot} style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '12px', fontWeight: 'bold' }}>{slot}</td>
-                                    <td style={{ padding: '12px' }}>
-                                        {appt?.patientName || '—'}
-                                        {appt?.isRecurring && <span style={{ marginLeft: '8px', fontSize: '0.7rem', background: '#e0e7ff', padding: '2px 6px', borderRadius: '12px' }}>?? Recurring</span>}
-                                    </td>
-                                    <td style={{ padding: '12px' }}>{appt?.doctorName || '—'}</td>
-                                    <td style={{ padding: '12px' }}>{appt?.purpose || '—'}</td>
+                                    <td style={{ padding: '12px' }}>{appt?.patientName || 'â€”'}</td>
+                                    <td style={{ padding: '12px' }}>{appt?.doctorName || 'â€”'}</td>
+                                    <td style={{ padding: '12px' }}>{appt?.purpose || 'â€”'}</td>
                                     <td style={{ padding: '12px' }}>
                                         {appt && (
                                             <select
@@ -326,21 +326,11 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <option value="scheduled">{t('appointment.status_scheduled')}</option>
-                                                <option value="completed">{t('appointment.status_completed')}</option>
-                                                <option value="cancelled">{t('appointment.status_cancelled')}</option>
-                                                <option value="no-show">{t('appointment.status_no-show')}</option>
+                                                <option value="scheduled">Scheduled</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="cancelled">Cancelled</option>
+                                                <option value="no-show">No-Show</option>
                                             </select>
-                                        )}
-                                    </td>
-                                    <td style={{ padding: '12px' }}>
-                                        {appt && (
-                                            <button
-                                                onClick={() => onSelectAppointment?.(appt)}
-                                                style={{ background: '#6b7280', color: 'white', padding: '4px 8px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem' }}
-                                            >
-                                                {t('common.view')}
-                                            </button>
                                         )}
                                     </td>
                                 </tr>
@@ -348,10 +338,6 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ onSelectAppoi
                         })}
                     </tbody>
                 </table>
-            </div>
-            
-            <div style={{ marginTop: '16px', fontSize: '0.75rem', color: '#6b7280', textAlign: 'center' }}>
-                ?? {t('appointment.reminderNote')} - SMS/Email reminders are checked hourly for next day's appointments
             </div>
         </div>
     );
