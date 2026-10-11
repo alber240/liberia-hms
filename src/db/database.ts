@@ -238,6 +238,9 @@ export interface Payment {
     synced: number;
 }
 
+
+
+
 // Staff and Authentication Interfaces
 export interface Staff {
     id?: number;
@@ -326,6 +329,51 @@ export interface PayrollItem {
     synced: number;
 }
 
+
+// ===== PREDICTION ENGINE INTERFACES =====
+
+export interface SymptomEntry {
+    id?: number;
+    patientUhid: string;
+    patientName: string;
+    patientAge: number;
+    patientSex: 'M' | 'F';
+    temperature?: number;
+    symptoms: string[];           // array of symptom codes
+    duration: number;             // days
+    notes: string;
+    createdAt: string;
+    synced: number;
+}
+
+export interface Prediction {
+    id?: number;
+    symptomEntryId: number;
+    patientUhid: string;
+    patientName: string;
+
+    matchedRuleId: string;
+    matchedRuleName: string;
+    tier: 1 | 2 | 3;
+
+    title: string;
+    summary: string;
+
+    possibleConditions: {
+        name: string;
+        likelihood: 'very_likely' | 'likely' | 'possible' | 'unlikely';
+    }[];
+
+    recommendedActions: string[];
+    returnImmediatelyIf: string[];
+    return24hIf: string[];
+    return48hIf: string[];
+
+    confidence: number;
+    createdAt: string;
+    synced: number;
+}
+
 // EMR Interfaces
 export interface SOAPNote {
     id?: number;
@@ -393,13 +441,15 @@ class LiberiaHMSDatabase extends Dexie {
     attendance!: Table<Attendance, number>;
     payroll!: Table<Payroll, number>;
     payrollItems!: Table<PayrollItem, number>;
+    symptomEntries!: Table<SymptomEntry, number>;
+    predictions!: Table<Prediction, number>;
     soapNotes!: Table<SOAPNote, number>;
     vitalSigns!: Table<VitalSign, number>;
     syncQueue!: Table<SyncQueue, number>;
 
     constructor() {
         super("LiberiaHMSDB");
-        this.version(11).stores({
+        this.version(12).stores({
             patients: "uhid, fullName, phone, registrationDate, synced",
             doctors: "id, name, specialty, synced",
             appointments: "++id, patientUhid, doctorId, date, time, status, reminderSent, isRecurring, parentAppointmentId, synced",
@@ -422,6 +472,8 @@ class LiberiaHMSDatabase extends Dexie {
             soapNotes: "++id, patientUhid, doctorId, date, status, synced",
             vitalSigns: "++id, patientUhid, recordedAt, synced",
             syncQueue: "++id, operation, timestamp",
+            symptomEntries: "++id, patientUhid, createdAt, synced",
+            predictions: "++id, symptomEntryId, patientUhid, tier, createdAt, synced",
         });
     }
 

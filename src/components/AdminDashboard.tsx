@@ -15,6 +15,7 @@ import ReferralTransfer from './ReferralTransfer';
 import LanguageSwitcher from './LanguageSwitcher';
 import OfflineIndicator from './OfflineIndicator';
 import SyncButton from './SyncButton';
+import PredictionEngine from '../pages/PredictionEngine';
 
 interface AdminDashboardProps {
     onLogout: () => void;
@@ -26,9 +27,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     const userRole = user?.role || '';
 
     const rolePermissions: Record<string, string[]> = {
-        admin: ['dashboard', 'staff', 'payroll', 'patients', 'appointments', 'pharmacy', 'laboratory', 'billing', 'emr', 'vitals', 'beds', 'referral'],
-        doctor: ['dashboard', 'patients', 'appointments', 'pharmacy', 'laboratory', 'emr', 'vitals'],
-        nurse: ['dashboard', 'patients', 'appointments', 'pharmacy', 'laboratory', 'vitals', 'beds', 'referral'],
+        admin: ['dashboard', 'staff', 'payroll', 'patients', 'appointments', 'pharmacy', 'laboratory', 'billing', 'emr', 'vitals', 'beds', 'referral', 'prediction'],
+        doctor: ['dashboard', 'patients', 'appointments', 'pharmacy', 'laboratory', 'emr', 'vitals', 'prediction'],
+        nurse: ['dashboard', 'patients', 'appointments', 'vitals', 'beds', 'prediction'],
         pharmacist: ['dashboard', 'pharmacy'],
         lab_tech: ['dashboard', 'laboratory'],
         cashier: ['dashboard', 'billing'],
@@ -119,6 +120,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         🛏️ Beds
                     </button>
                 )}
+
+                {allowedTabs.includes('prediction') && (
+    <button onClick={() => setActiveTab('prediction')} style={{ padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: activeTab === 'prediction' ? 'bold' : 'normal', borderBottom: activeTab === 'prediction' ? '3px solid #0f2b3d' : 'none' }}>
+        🧠 Prediction
+    </button>
+)}
+
+
                 {allowedTabs.includes('referral') && (
                     <button onClick={() => setActiveTab('referral')} style={{ padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: activeTab === 'referral' ? 'bold' : 'normal', borderBottom: activeTab === 'referral' ? '3px solid #0f2b3d' : 'none' }}>
                         🔄 Referral
@@ -140,6 +149,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 {activeTab === 'vitals' && <VitalSigns />}
                 {activeTab === 'beds' && <BedManagement />}
                 {activeTab === 'referral' && <ReferralTransfer />}
+                {activeTab === 'prediction' && <PredictionEngine />}
             </div>
         </div>
     );
