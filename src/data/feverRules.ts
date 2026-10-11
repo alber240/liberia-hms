@@ -432,7 +432,7 @@ export const FEVER_RULES: ClinicalRule[] = [
         priority: 8,
         requiredSymptoms: ['fever'],
         anyOfSymptoms: ['cough', 'runny_nose', 'sore_throat'],
-        excludedSymptoms: ['danger_chest_indrawing', 'difficulty_breathing', 'no_malaria_response', 'facial_swelling', 'bleeding', 'neck_stiffness'],
+        excludedSymptoms: ['danger_chest_indrawing', 'difficulty_breathing', 'no_malaria_response', 'facial_swelling', 'bleeding', 'neck_stiffness', 'loss_smell'],
         title: 'Fever + Respiratory Symptoms',
         titleFr: 'Fièvre + Symptômes respiratoires',
         summary: 'Fever with upper respiratory symptoms. Check for pneumonia.',

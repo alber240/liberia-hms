@@ -1,5 +1,14 @@
 import { FEVER_RULES, ClinicalRule } from '../data/feverRules';
+import { RESPIRATORY_RULES } from '../data/respiratoryRules';
+import { DIARRHEAL_RULES } from '../data/diarrhealRules';
 import { SymptomEntry, Prediction } from '../db/database';
+
+// Combine all rules
+const ALL_RULES: ClinicalRule[] = [
+    ...FEVER_RULES,
+    ...RESPIRATORY_RULES,
+    ...DIARRHEAL_RULES
+];
 
 export interface PredictionInput {
     symptoms: string[];
@@ -20,7 +29,7 @@ export interface PredictionOutput {
 // ================================================
 
 export function predict(input: PredictionInput): PredictionOutput {
-    const matchingRules = FEVER_RULES.filter(rule => matchesRule(rule, input));
+    const matchingRules = ALL_RULES.filter(rule => matchesRule(rule, input));
 
     if (matchingRules.length === 0) {
         return {
@@ -91,15 +100,11 @@ function matchesRule(rule: ClinicalRule, input: PredictionInput): boolean {
 // ================================================
 
 function calculateConfidence(rule: ClinicalRule, input: PredictionInput): number {
-    // Base confidence on rule tier
     let base = 60;
 
-    // Tier 1 = emergency, high confidence something is wrong
     if (rule.tier === 1) base = 90;
-    // Tier 2 = common, moderate confidence
     else if (rule.tier === 2) base = 70;
 
-    // More symptoms matched = higher confidence
     const symptomBonus = Math.min(input.symptoms.length * 2, 15);
 
     return Math.min(base + symptomBonus, 95);
@@ -146,7 +151,7 @@ export function debugNoMatch(input: PredictionInput): string {
     const symptoms = new Set(input.symptoms);
     const results: string[] = [];
 
-    for (const rule of FEVER_RULES) {
+    for (const rule of ALL_RULES) {
         let why = '';
 
         if (rule.requiredSymptoms) {
