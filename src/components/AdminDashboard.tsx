@@ -16,6 +16,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import OfflineIndicator from './OfflineIndicator';
 import SyncButton from './SyncButton';
 import PredictionEngine from '../pages/PredictionEngine';
+import UserGuide from '../pages/UserGuide';
 
 interface AdminDashboardProps {
     onLogout: () => void;
@@ -27,8 +28,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     const userRole = user?.role || '';
 
     const rolePermissions: Record<string, string[]> = {
-        admin: ['dashboard', 'staff', 'payroll', 'patients', 'appointments', 'pharmacy', 'laboratory', 'billing', 'emr', 'vitals', 'beds', 'referral', 'prediction'],
-        doctor: ['dashboard', 'patients', 'appointments', 'pharmacy', 'laboratory', 'emr', 'vitals', 'prediction'],
+        admin: ['dashboard', 'staff', 'payroll', 'patients', 'appointments', 'pharmacy', 'laboratory', 'billing', 'emr', 'vitals', 'beds', 'referral', 'prediction', 'guide'],
+        doctor: ['dashboard', 'patients', 'appointments', 'pharmacy', 'laboratory', 'emr', 'vitals', 'prediction', 'guide'],
         nurse: ['dashboard', 'patients', 'appointments', 'vitals', 'beds', 'prediction'],
         pharmacist: ['dashboard', 'pharmacy'],
         lab_tech: ['dashboard', 'laboratory'],
@@ -126,6 +127,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         🧠 Prediction
     </button>
 )}
+{allowedTabs.includes('guide') && (
+    <button onClick={() => setActiveTab('guide')} style={{ padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: activeTab === 'guide' ? 'bold' : 'normal', borderBottom: activeTab === 'guide' ? '3px solid #0f2b3d' : 'none' }}>
+        📚 Help & Feedback
+    </button>
+)}
 
 
                 {allowedTabs.includes('referral') && (
@@ -150,6 +156,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 {activeTab === 'beds' && <BedManagement />}
                 {activeTab === 'referral' && <ReferralTransfer />}
                 {activeTab === 'prediction' && <PredictionEngine />}
+                {activeTab === 'guide' && <UserGuide />}
             </div>
         </div>
     );
