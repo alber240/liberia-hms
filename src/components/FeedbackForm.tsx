@@ -56,7 +56,7 @@ Other Comments:
 ${formData.otherComments}
         `.trim();
 
-        const mailtoLink = `mailto:allen.tech-africa@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const mailtoLink = `mailto:bigchicha74@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.location.href = mailtoLink;
 
         setTimeout(() => {
@@ -80,7 +80,7 @@ ${formData.otherComments}
         <div style={{ background: 'white', padding: '30px', borderRadius: '12px' }}>
             <h2>📝 Send Feedback</h2>
             <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-                Your review will be sent to <strong>allen.tech-africa@gmail.com</strong>. Please be honest — your feedback shapes the system.
+                Your review will be sent to <strong>bigchicha74@gmail.com</strong>. Please be honest — your feedback shapes the system.
             </p>
 
             <form onSubmit={handleSubmit}>
@@ -158,7 +158,7 @@ ${formData.otherComments}
                 </button>
 
                 <p style={{ marginTop: '16px', fontSize: '0.85rem', color: '#6b7280' }}>
-                    Your feedback goes directly to <strong>allen.tech-africa@gmail.com</strong>. Thank you for your time.
+                    Your feedback goes directly to <strong>bigchicha74@gmail.completely</strong>. Thank you for your time.
                 </p>
             </form>
         </div>
